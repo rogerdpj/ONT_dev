@@ -10,9 +10,9 @@ process TRIMMING {
     tuple val(barcode_id), path("${barcode_id}_clean.fastq.gz"), emit: barcodefile_compress
     
     // Define default parameter values with fallback
-    def min_length = params.min_length ?: 500
+    def min_length = params.min_length ?: 1000
     def keep_percent = params.keep_percent ?: 90
-    def min_mean_q = params.min_mean_q ?: 10 
+    def min_mean_q = params.min_mean_q ?: 12 
     
     script:
     """
@@ -22,6 +22,6 @@ process TRIMMING {
 
     NanoStat --fastq ${barcode_id}_clean.fastq > ${barcode_id}_NanoStat.log
 
-    gzip -k ${barcode_id}_clean.fastq
+    gzip -kf ${barcode_id}_clean.fastq
     """
 }
