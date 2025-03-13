@@ -25,6 +25,8 @@ include { SUB_SAMPLE_1                                }     from '../bin/assembl
 include { SUB_SAMPLE_2                                }     from '../bin/assemble/fly/main'
 include { SUB_SAMPLE_3                                }     from '../bin/assemble/raven/main'
 include { MERGE_ASSEMBLE                              }     from '../bin/assemble/trycycler/merge_subsample'
+include { MERGE_ASSEMBLE as RECONCILE_ASSEMBLE        }     from '../bin/assemble/trycycler/merge_subsample'
+
 /*
 
 include { POLISHING_1                                 }     from '../bin/assemble/main'
@@ -115,8 +117,17 @@ workflow assamble_process {
 
 
     trycycler_ch = MERGE_ASSEMBLE(trycyler_input_ch)
-    
+
+    trycycler_ch.view()
+
+
+    RECONCILE_ASSEMBLE(trycycler_ch.merge_assemblies_trycycler)
+
+
 /* 
+
+    
+
     //POLISHING
      // Determinar el número máximo de rondas de pulido
     def max_rounds = params.min_mean_q <= 14 ? 8 : 5

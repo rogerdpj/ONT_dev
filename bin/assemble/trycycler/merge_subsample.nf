@@ -9,11 +9,13 @@ process MERGE_ASSEMBLE {
     tuple val(sample_code), val(barcode_id), path(barcodefile), val(genome_size), path(assembly_canu_file), path(fly_assambly_tuple), path(raven_aseembly_file)
 
     output:
-    path "clustering_${barcode_id}/", emit: merge_assemblies_trycycler
+    tuple val(sample_code), val(barcode_id), path("clustering_${barcode_id}/cluster_*/"), emit: merge_assemblies_trycycler
 
     script:
 
     """
+
+    export GENOME_SIZE=${genome_size}
 
     # Verificar que los ensamblajes existen y no están vacíos
     if [[ ! -s ${assembly_canu_file} || ! -s ${fly_assambly_tuple} || ! -s ${raven_aseembly_file} ]]; then
@@ -35,35 +37,58 @@ process MERGE_ASSEMBLE {
         -o clustering_${barcode_id} \
         --threads 8 2>&1 | tee clustering_info_${barcode_id}/clustering_info.txt
 
-    # Paso 2: Filtrar clusters automáticamente con el script externo 
-    
-    export GENOME_SIZE=${genome_size}
-    ${params.filterClustersScript} clustering_${barcode_id}
 
+
+    # Paso 2: Filtrar clusters automáticamente con el script externo para etiquetar
+    #y reducir el numero de contings
+    
+    bash ${params.filterClustersScript} clustering_${barcode_id}
+
+
+    """
+}
+
+
+process RECONCILE_ASSEMBLE {
+    tag "Reconcile assemblies for barcode ${barcode_id}"
+
+    publishDir "${params.outdir}/7-reconcile_assemble", mode: 'copy'
+
+    container "$params.trycyler.docker"
+
+    input:
+    tuple val(sample_code), val(barcode_id), path(cluster_dir)
+
+    output:
+    path "clustering_${barcode_id}/cluster_001/7_final_consensus.fasta", emit: final_consensus
+
+    script:
+    """
+
+
+    # Paso 2: Ejecutar Trycycler reconcile en el cluster aceptado
+    trycycler reconcile --cluster_dir ${cluster_dir}/cluster_001 2>&1 | tee ${cluster_dir}/cluster_001/reconcile.log
+
+    # Mover el consenso final a la salida
+    mv ${cluster_dir}/cluster_001/7_final_consensus.fasta .
     """
 }
 
 /*
 
-   
 
+    # Paso 3: Reconciliar clusters buenos
 
-    # Paso 3: Reconciliar clusters buenos (Corrección: solo una vez)
-    # Verificar si hay clusters válidos
-
-    cluster_count=\$(find clustering_${barcode_id}/ -type d -name "cluster_*" | wc -l)
-
-    if [[ "\$cluster_count" -eq 0 ]]; then
-        echo "No se encontraron clusters válidos. Abortando." >&2
-        exit 1
-    fi
-
+    find clustering_${barcode_id} -maxdepth 1 -type d -name "cluster_*" > valid_clusters.txt
+    
     for cluster_dir in clustering_${barcode_id}/cluster_*; do
-        trycycler reconcile --cluster_dir \$cluster_dir --reads ${barcodefile} || {
-            echo "Error en la reconciliación del cluster \$cluster_dir. Cluster descartado."
-            rm -rf "\$cluster_dir"
-        }
+    echo "🔄 Reconciliando cluster: $cluster_dir"
+    trycycler reconcile -d "$cluster_dir" -r "${barcodefile}" --threads 8 || {
+        echo "❌ Error en la reconciliación del cluster $cluster_dir. Revisa los logs antes de continuar."
+        exit 1
+    }
     done
+    
 
     # Paso 5: Comparar identidad entre contigs si hay al menos dos contigs
 

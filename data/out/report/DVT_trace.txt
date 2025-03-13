@@ -2,7 +2,6 @@ task_id	hash	native_id	name	status	exit	submit	duration	realtime	%cpu	peak_rss	p
 1	aa/95031f	1216672	hybrid_vc:pre_process:QC (Quality control RAW data)	CACHED	0	2025-03-05 12:27:12.275	55.2s	54.4s	100.4%	2.5 GB	71.8 GB	958.9 MB	464.6 MB
 2	44/c06091	424028	hybrid_vc:pre_process:TRIMMING (prunning process)	CACHED	0	2025-03-07 17:36:16.803	5m 45s	5m 43s	352.1%	1.6 GB	13.1 GB	3.2 GB	1.9 GB
 3	52/8fa8e0	532524	hybrid_vc:assamble_process:SUB_SAMPLE (SUB SAMPLE TRYCYCLER FROM LONG READS)	CACHED	0	2025-03-07 17:42:01.618	57.7s	37.9s	110.3%	71.2 MB	3.8 GB	15.1 GB	9.1 GB
-4	e3/989619	552402	hybrid_vc:assamble_process:SUB_SAMPLE_1 (Assemble with Canu - barcode20)	CACHED	0	2025-03-07 17:42:59.568	3h 10m 8s	3h 10m 6s	456.4%	7.5 GB	9.8 GB	278.5 GB	9.9 GB
+5	e3/989619	552402	hybrid_vc:assamble_process:SUB_SAMPLE_1 (Assemble with Canu - barcode20)	CACHED	0	2025-03-07 17:42:59.568	3h 10m 8s	3h 10m 6s	456.4%	7.5 GB	9.8 GB	278.5 GB	9.9 GB
 6	ca/ffbbd9	988280	hybrid_vc:assamble_process:SUB_SAMPLE_3 (Assemble with Raven - barcode20)	CACHED	0	2025-03-07 18:00:51.536	1h 17m	1h 16m 59s	773.7%	24.5 GB	27.5 GB	4.5 GB	63.6 KB
-5	0d/ba0af2	552360	hybrid_vc:assamble_process:SUB_SAMPLE_2 (ASSAMBLE FLY LONG READS AB306)	CACHED	0	2025-03-07 17:42:59.534	17m 52s	17m 51s	389.1%	9.2 GB	13.1 GB	13.7 GB	4.3 GB
-7	97/2f2cec	2133952	hybrid_vc:assamble_process:MERGE_ASSEMBLE (Merge assemble using Trycycler barcode20)	COMPLETED	0	2025-03-12 11:50:44.225	7m 6s	7m 5s	722.3%	3.2 GB	7.6 GB	18.8 GB	560.7 MB
+4	0d/ba0af2	552360	hybrid_vc:assamble_process:SUB_SAMPLE_2 (ASSAMBLE FLY LONG READS AB306)	CACHED	0	2025-03-07 17:42:59.534	17m 52s	17m 51s	389.1%	9.2 GB	13.1 GB	13.7 GB	4.3 GB
