@@ -3,5 +3,10 @@ task_id	hash	native_id	name	status	exit	submit	duration	realtime	%cpu	peak_rss	p
 2	44/c06091	424028	hybrid_vc:pre_process:TRIMMING (prunning process)	CACHED	0	2025-03-07 17:36:16.803	5m 45s	5m 43s	352.1%	1.6 GB	13.1 GB	3.2 GB	1.9 GB
 3	52/8fa8e0	532524	hybrid_vc:assamble_process:SUB_SAMPLE (SUB SAMPLE TRYCYCLER FROM LONG READS)	CACHED	0	2025-03-07 17:42:01.618	57.7s	37.9s	110.3%	71.2 MB	3.8 GB	15.1 GB	9.1 GB
 5	e3/989619	552402	hybrid_vc:assamble_process:SUB_SAMPLE_1 (Assemble with Canu - barcode20)	CACHED	0	2025-03-07 17:42:59.568	3h 10m 8s	3h 10m 6s	456.4%	7.5 GB	9.8 GB	278.5 GB	9.9 GB
-6	ca/ffbbd9	988280	hybrid_vc:assamble_process:SUB_SAMPLE_3 (Assemble with Raven - barcode20)	CACHED	0	2025-03-07 18:00:51.536	1h 17m	1h 16m 59s	773.7%	24.5 GB	27.5 GB	4.5 GB	63.6 KB
 4	0d/ba0af2	552360	hybrid_vc:assamble_process:SUB_SAMPLE_2 (ASSAMBLE FLY LONG READS AB306)	CACHED	0	2025-03-07 17:42:59.534	17m 52s	17m 51s	389.1%	9.2 GB	13.1 GB	13.7 GB	4.3 GB
+6	ca/ffbbd9	988280	hybrid_vc:assamble_process:SUB_SAMPLE_3 (Assemble with Raven - barcode20)	CACHED	0	2025-03-07 18:00:51.536	1h 17m	1h 16m 59s	773.7%	24.5 GB	27.5 GB	4.5 GB	63.6 KB
+7	16/5a19b9	3906720	hybrid_vc:assamble_process:RECONCILE_ASSEMBLE (Reconcile assemblies for barcode barcode20)	CACHED	0	2025-03-19 10:58:52.195	26.7s	25.9s	183.2%	687.2 MB	29.2 GB	137.5 MB	95.2 MB
+8	19/105ec9	2595461	hybrid_vc:assamble_process:MERGE_ASSEMBLE (Merge assemble using Trycycler barcode20)	CACHED	0	2025-03-13 23:48:30.845	6m 12s	6m 11s	751.7%	3.2 GB	7.6 GB	18.8 GB	568.4 MB
+9	9d/371383	306484	hybrid_vc:assamble_process:MSA (Multiple Sequence Alignment for barcode20)	COMPLETED	0	2025-03-19 13:55:14.188	22.7s	21.6s	648.1%	996 MB	54.2 GB	81.6 MB	27.2 MB
+10	3b/16b63f	319517	hybrid_vc:assamble_process:PARTITION (Partitioning reads for barcode20)	COMPLETED	0	2025-03-19 13:55:36.960	54.7s	53.4s	1079.6%	699.4 MB	5.7 GB	3.1 GB	811.3 MB
+11	75/290993	336171	hybrid_vc:assamble_process:CONSENSUS (Generating final consensus for barcode20)	COMPLETED	0	2025-03-19 13:56:31.732	57.6s	56.5s	1001.0%	1.7 GB	6.6 GB	2.5 GB	154.3 MB

@@ -25,9 +25,13 @@ include { SUB_SAMPLE_1                                }     from '../bin/assembl
 include { SUB_SAMPLE_2                                }     from '../bin/assemble/fly/main'
 include { SUB_SAMPLE_3                                }     from '../bin/assemble/raven/main'
 include { MERGE_ASSEMBLE                              }     from '../bin/assemble/trycycler/merge_subsample'
-include { MERGE_ASSEMBLE as RECONCILE_ASSEMBLE        }     from '../bin/assemble/trycycler/merge_subsample'
-
+include { RECONCILE_ASSEMBLE                          }     from '../bin/assemble/trycycler/conciliacion'
+include { MSA                                         }     from '../bin/assemble/trycycler/msa'
+include { PARTITION                                   }     from '../bin/assemble/trycycler/partition'
+include { CONSENSUS                                   }     from '../bin/assemble/trycycler/consensus'
+include { POLISHING                                   }     from '../bin/polishing/main_2'
 /*
+
 
 include { POLISHING_1                                 }     from '../bin/assemble/main'
 include { CONSENSUM                                   }     from '../bin/assemble/main'
@@ -57,6 +61,7 @@ include { AMR_2 as POST_ANALYSIS_AMRFINDER            }     from '../bin/AMR/AMR
 workflow hybrid_vc {
     preprocess_output = pre_process()
     assambleprocess_output = assamble_process(preprocess_output.trimming_files_ch)
+    post_analysis_output = post_analysis(assambleprocess_output.consensus_ch)
      /*
     vcprocess_output = workflow_vc()
     amrprocess_output = workflow_amr( preprocess_output.contigs_ch)
@@ -117,16 +122,43 @@ workflow assamble_process {
 
 
     trycycler_ch = MERGE_ASSEMBLE(trycyler_input_ch)
+   
+    merge_ch = params.merge
 
-    trycycler_ch.view()
+    reconcile_ch = RECONCILE_ASSEMBLE(merge_ch, reads_for_try_ch)
+
+    msa_ch = MSA(reconcile_ch.reconciled_dir)
+
+    partition_ch = PARTITION(msa_ch.msa_dir, trimming_files_ch)
+
+    consensus_ch = CONSENSUS(partition_ch.partition_dir)
+
+    emit:
+    consensus_ch
+
+}
+
+workflow post_analysis {
+    
+    take:
+    consensus_ch
+
+    main:
+    // Canal de lecturas
+    read_ch = Channel.fromFilePairs(params.short_inputs, size: 2)
+    // Trimming de las lecturas
+    trimmed_read_ch = TRIMMING(read_ch)
+    fq_gz_reads_ch = trimmed_read_ch.trimmed_reads
+
+    polishing_ch = POLISHING(consensus_ch,fq_gz_reads_ch)
 
 
-    RECONCILE_ASSEMBLE(trycycler_ch.merge_assemblies_trycycler)
+}
 
 
 /* 
-
     
+
 
     //POLISHING
      // Determinar el número máximo de rondas de pulido
@@ -149,14 +181,8 @@ workflow assamble_process {
     // Al final, polished_ch tendrá el ensamblaje pulido final para cada barcode después del número especificado de rondas.
     polished_ch.view()
 }
-
+*/
     
-
-
-    emit:
-    */
-}
-
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                 FUNCTIONS                                  //

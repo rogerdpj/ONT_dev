@@ -1,5 +1,5 @@
 process MERGE_ASSEMBLE {
-    tag "Merge assemble using Trycycler ${barcode_id}"
+    tag "Merge assemble using Trycycler ${sample_code}"
 
     publishDir "${params.outdir}/6-merge_assemble", mode: 'copy'
 
@@ -9,7 +9,7 @@ process MERGE_ASSEMBLE {
     tuple val(sample_code), val(barcode_id), path(barcodefile), val(genome_size), path(assembly_canu_file), path(fly_assambly_tuple), path(raven_aseembly_file)
 
     output:
-    tuple val(sample_code), val(barcode_id), path("clustering_${barcode_id}/cluster_*/"), emit: merge_assemblies_trycycler
+    tuple val(sample_code), val(barcode_id), path("clustering_${barcode_id}_contigs")
 
     script:
 
@@ -43,11 +43,11 @@ process MERGE_ASSEMBLE {
     #y reducir el numero de contings
     
     bash ${params.filterClustersScript} clustering_${barcode_id}
-
-
+    
     """
 }
 
+/*
 
 process RECONCILE_ASSEMBLE {
     tag "Reconcile assemblies for barcode ${barcode_id}"
@@ -57,24 +57,22 @@ process RECONCILE_ASSEMBLE {
     container "$params.trycyler.docker"
 
     input:
-    tuple val(sample_code), val(barcode_id), path(cluster_dir)
+    tuple val(sample_code), val(barcode_id), path(contigs_dir) from merge_assemblies_trycycler
 
     output:
-    path "clustering_${barcode_id}/cluster_001/7_final_consensus.fasta", emit: final_consensus
+    path "${contigs_dir}/7_final_consensus.fasta", emit: final_consensus
 
     script:
     """
 
-
-    # Paso 2: Ejecutar Trycycler reconcile en el cluster aceptado
-    trycycler reconcile --cluster_dir ${cluster_dir}/cluster_001 2>&1 | tee ${cluster_dir}/cluster_001/reconcile.log
+    # Ejecutar Trycycler reconcile en el directorio de contigs ya limpio
+    trycycler reconcile --cluster_dir ${contigs_dir} 2>&1 | tee ${contigs_dir}/reconcile.log
 
     # Mover el consenso final a la salida
-    mv ${cluster_dir}/cluster_001/7_final_consensus.fasta .
+    mv ${contigs_dir}/7_final_consensus.fasta .
     """
 }
 
-/*
 
 
     # Paso 3: Reconciliar clusters buenos

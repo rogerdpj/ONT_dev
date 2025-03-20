@@ -12,6 +12,7 @@ clustering_dir="$1"
 info_dir=$(echo "$clustering_dir" | sed 's/clustering_/clustering_info_/')
 log_file="${info_dir}/clustering_info.txt"
 output_file="${clustering_dir}/filtered_clusters_report.txt"
+contigs_output_dir="${clustering_dir}_contigs"  # 📌 Nuevo directorio para contigs aceptados
 
 # 📌 Verificar que el archivo de información de clustering existe
 if [[ ! -f "$log_file" ]]; then
@@ -53,6 +54,9 @@ done < "$log_file"
 echo "📌 Contigs procesados: ${!contig_sizes[@]}"
 echo "📌 Profundidades almacenadas: ${contig_depths[@]}"
 
+# 📌 Crear directorio de salida para contigs aceptados
+mkdir -p "$contigs_output_dir"
+
 # 📌 Iterar sobre los clusters y procesar los contigs
 for cluster_dir in "${clustering_dir}/cluster_"*; do
     cluster_name=$(basename "$cluster_dir")
@@ -80,6 +84,9 @@ for cluster_dir in "${clustering_dir}/cluster_"*; do
         # 📌 Evaluar si el contig debe ser retenido
         if [[ "$contig_size" -ge "$genome_min_size" && "$contig_size" -le "$genome_max_size" && "$contig_depth" -ge "$min_coverage" ]]; then
             status="ACEPTADO"
+
+            # 📌 Copiar los contigs aceptados al directorio de salida
+            cp "$file" "$contigs_output_dir/"
         else
             status="RECHAZADO"
         fi
@@ -106,4 +113,4 @@ for cluster in "${!rejected_clusters[@]}"; do
     rm -rf "${clustering_dir}/${cluster}"
 done
 
-echo "✅ Proceso de filtrado y eliminación completado."
+echo "✅ Proceso de filtrado, copia y eliminación completado."
