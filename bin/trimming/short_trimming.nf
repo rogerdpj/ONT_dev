@@ -1,6 +1,7 @@
 process TRIMMING {
     tag "fastp ${pair_id}"
 
+    container "$params.short_wgs.docker"
     input:
     tuple val(pair_id), path(reads) 
 

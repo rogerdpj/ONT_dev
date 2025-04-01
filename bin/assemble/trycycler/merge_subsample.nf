@@ -9,7 +9,8 @@ process MERGE_ASSEMBLE {
     tuple val(sample_code), val(barcode_id), path(barcodefile), val(genome_size), path(assembly_canu_file), path(fly_assambly_tuple), path(raven_aseembly_file)
 
     output:
-    tuple val(sample_code), val(barcode_id), path("clustering_${barcode_id}_contigs")
+    tuple val(sample_code), val(barcode_id), path("clustering_${barcode_id}_chromosome"), emit: chrom_clusters
+    tuple val(sample_code), val(barcode_id), path("clustering_${barcode_id}_plasmid/cluster_*/1_contigs/*.fasta"), emit: plasmid_clusters
 
     script:
 

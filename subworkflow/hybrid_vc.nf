@@ -29,7 +29,14 @@ include { RECONCILE_ASSEMBLE                          }     from '../bin/assembl
 include { MSA                                         }     from '../bin/assemble/trycycler/msa'
 include { PARTITION                                   }     from '../bin/assemble/trycycler/partition'
 include { CONSENSUS                                   }     from '../bin/assemble/trycycler/consensus'
-include { POLISHING                                   }     from '../bin/polishing/main_2'
+include { MOB_SUITE                                   }     from '../bin/plasmid/mob/main'
+include { TRIMMING as SHORT_TRIMMING                  }     from '../bin/trimming/short_trimming'
+include { ALIGN_SHORT_READS;FILTER_ALIGNMENTS;POLISH  }     from '../bin/polishing/main_2'
+include { QUAST                                       }     from '../bin/qc/quast/main'
+include { AMR                                         }     from '../bin/AMR/abricate/main'
+include { AMR_2                                       }     from '../bin/AMR/resfinder/main'
+include { PROKKA                                      }     from '../bin/annotation/prokka/main'
+include { BUSCO                                       }     from '../bin/qc/busco/main'
 /*
 
 
@@ -61,8 +68,9 @@ include { AMR_2 as POST_ANALYSIS_AMRFINDER            }     from '../bin/AMR/AMR
 workflow hybrid_vc {
     preprocess_output = pre_process()
     assambleprocess_output = assamble_process(preprocess_output.trimming_files_ch)
+    
     post_analysis_output = post_analysis(assambleprocess_output.consensus_ch)
-     /*
+    /* 
     vcprocess_output = workflow_vc()
     amrprocess_output = workflow_amr( preprocess_output.contigs_ch)
     */
@@ -133,6 +141,8 @@ workflow assamble_process {
 
     consensus_ch = CONSENSUS(partition_ch.partition_dir)
 
+    plasmid_process_ch = MOB_SUITE(trycycler_ch.plasmid_clusters)
+
     emit:
     consensus_ch
 
@@ -147,42 +157,25 @@ workflow post_analysis {
     // Canal de lecturas
     read_ch = Channel.fromFilePairs(params.short_inputs, size: 2)
     // Trimming de las lecturas
-    trimmed_read_ch = TRIMMING(read_ch)
+    trimmed_read_ch = SHORT_TRIMMING(read_ch)
     fq_gz_reads_ch = trimmed_read_ch.trimmed_reads
 
-    polishing_ch = POLISHING(consensus_ch,fq_gz_reads_ch)
+    aligned_bam_ch = ALIGN_SHORT_READS(consensus_ch,fq_gz_reads_ch)
+
+    filtered_sam_ch = FILTER_ALIGNMENTS(aligned_bam_ch.aligned_sam1,aligned_bam_ch.aligned_sam2)
+
+    polishing_ch = POLISH (consensus_ch,filtered_sam_ch)
+
+    QUAST(polishing_ch)
+
+    AMR(polishing_ch)
+    AMR_2(polishing_ch)
+    PROKKA(polishing_ch)
+    BUSCO(polishing_ch)
 
 
 }
 
-
-/* 
-    
-
-
-    //POLISHING
-     // Determinar el número máximo de rondas de pulido
-    def max_rounds = params.min_mean_q <= 14 ? 8 : 5
-
-    // Canal inicial con ensamblaje y lecturas constantes para cada barcode
-    polished_ch = genome_ch.map { barcode_id, input_fasta -> tuple(barcode_id, input_fasta, input_reads) }
-
-    // Bucle de pulido
-    polished_ch = (1..max_rounds).inject(polished_ch) { ch, round ->
-        ch.map { barcode_id, input_fasta, input_reads -> 
-            tuple(barcode_id, input_fasta, input_reads, round) 
-        }
-        .set { round_input_ch }  // Actualiza el canal de entrada para cada ronda
-
-        POLISHING_ROUND(round_input_ch)
-            .map { barcode_id, polished_fasta -> tuple(barcode_id, polished_fasta, input_reads) }
-    }
-
-    // Al final, polished_ch tendrá el ensamblaje pulido final para cada barcode después del número especificado de rondas.
-    polished_ch.view()
-}
-*/
-    
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                 FUNCTIONS                                  //

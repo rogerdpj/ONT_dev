@@ -1,116 +1,99 @@
 #!/bin/bash
 
-# 📌 Verificar que se proporciona el directorio de clusters como argumento
 if [[ -z "$1" ]]; then
     echo "❌ ERROR: Debes proporcionar el directorio de clusters."
-    echo "Uso: bash filter_clusters_debug.sh clustering_barcode20"
+    echo "Uso: bash filter_clusters.sh clustering_barcode20"
     exit 1
 fi
 
-# 📌 Definir los directorios y archivos
 clustering_dir="$1"
 info_dir=$(echo "$clustering_dir" | sed 's/clustering_/clustering_info_/')
 log_file="${info_dir}/clustering_info.txt"
 output_file="${clustering_dir}/filtered_clusters_report.txt"
-contigs_output_dir="${clustering_dir}_contigs"  # 📌 Nuevo directorio para contigs aceptados
+chromosome_list="${clustering_dir}/clusters_chromosome.txt"
+plasmid_list="${clustering_dir}/clusters_plasmid.txt"
 
-# 📌 Verificar que el archivo de información de clustering existe
-if [[ ! -f "$log_file" ]]; then
-    echo "❌ ERROR: No se encontró el archivo de información: $log_file"
-    exit 1
-fi
-
-# 📌 Parámetros de filtrado
-genome_size=${GENOME_SIZE:-4000000}  
+# Parámetros de filtrado
+genome_size=${GENOME_SIZE:-4000000}
 genome_min_size=$((genome_size * 80 / 100))
 genome_max_size=$((genome_size * 120 / 100))
-min_coverage=20  
+min_coverage=20
+plasmid_max_size=200000
+plasmid_min_depth=50
 
-# 📌 Crear archivo de salida con encabezado
-echo -e "Cluster\tContig\tSize_bp\tDepth_x\tStatus" > "$output_file"
+# Encabezados
+echo -e "Cluster\tContig\tSize_bp\tDepth_x\tTipo" > "$output_file"
+> "$chromosome_list"
+> "$plasmid_list"
 
-echo "📌 Filtrando clusters usando información de: $log_file"
-echo "📌 Límites: ${genome_min_size} - ${genome_max_size} bp y cobertura mínima ${min_coverage}x"
-
-# 📌 Extraer información de contigs
+# Diccionarios
 declare -A contig_sizes
 declare -A contig_depths
 
-echo "🔍 Leyendo archivo clustering_info.txt desde: $log_file"
-
+# Leer el archivo clustering_info.txt
 while IFS= read -r line; do
     if [[ "$line" =~ ([A-Z]_tig[0-9]+|B_contig_[0-9]+|C_Utg[0-9]+):[[:space:]]+([0-9,]+)\ bp,[[:space:]]+([0-9]+\.[0-9]+)x ]]; then
         contig_name="${BASH_REMATCH[1]}"
-        contig_size="${BASH_REMATCH[2]//,/}"  # Elimina comas en números grandes
+        contig_size="${BASH_REMATCH[2]//,/}"
         contig_depth="${BASH_REMATCH[3]}"
-
         contig_sizes["$contig_name"]=$contig_size
-        contig_depths["$contig_name"]=${contig_depth%.*}  # Elimina decimales para comparar en Bash
-
-        echo "✅ Contig encontrado: $contig_name | Tamaño: $contig_size bp | Cobertura: ${contig_depths["$contig_name"]}x"
+        contig_depths["$contig_name"]=${contig_depth%.*}
     fi
 done < "$log_file"
 
-echo "📌 Contigs procesados: ${!contig_sizes[@]}"
-echo "📌 Profundidades almacenadas: ${contig_depths[@]}"
+declare -A cluster_types
 
-# 📌 Crear directorio de salida para contigs aceptados
-mkdir -p "$contigs_output_dir"
-
-# 📌 Iterar sobre los clusters y procesar los contigs
-for cluster_dir in "${clustering_dir}/cluster_"*; do
+# Clasificación
+for cluster_dir in "${clustering_dir}"/cluster_*; do
     cluster_name=$(basename "$cluster_dir")
     contig_files=("$cluster_dir/1_contigs/"*.fasta)
 
-    if [[ ! -f "${contig_files[0]}" ]]; then
-        echo "❌ No se encontraron archivos de contigs en $cluster_dir."
-        continue
-    fi
+    [[ ! -f "${contig_files[0]}" ]] && continue
 
-    echo "🔎 Cluster encontrado: $cluster_name"
     for file in "${contig_files[@]}"; do
         contig_name=$(basename "$file" .fasta)
-
         contig_size=${contig_sizes["$contig_name"]}
         contig_depth=${contig_depths["$contig_name"]}
 
         if [[ -z "$contig_size" || -z "$contig_depth" ]]; then
-            echo "⚠️ No se encontró información para $contig_name en clustering_info.txt"
-            continue
-        fi
-
-        echo "📊 Contig en cluster: $cluster_name | $contig_name | ${contig_size} bp | ${contig_depth}x"
-
-        # 📌 Evaluar si el contig debe ser retenido
-        if [[ "$contig_size" -ge "$genome_min_size" && "$contig_size" -le "$genome_max_size" && "$contig_depth" -ge "$min_coverage" ]]; then
-            status="ACEPTADO"
-
-            # 📌 Copiar los contigs aceptados al directorio de salida
-            cp "$file" "$contigs_output_dir/"
+            tipo="RECHAZADO"
+        elif [[ "$contig_size" -ge "$genome_min_size" && "$contig_size" -le "$genome_max_size" && "$contig_depth" -ge "$min_coverage" ]]; then
+            tipo="CROMOSOMA"
+            cluster_types["$cluster_dir"]="CROMOSOMA"
+        elif [[ "$contig_size" -le "$plasmid_max_size" && "$contig_depth" -ge "$plasmid_min_depth" ]]; then
+            tipo="PLÁSMIDO"
+            cluster_types["$cluster_dir"]="PLÁSMIDO"
         else
-            status="RECHAZADO"
+            tipo="RECHAZADO"
         fi
 
-        # 📌 Guardar en el archivo de salida
-        echo -e "$cluster_name\t$contig_name\t$contig_size\t$contig_depth\t$status" >> "$output_file"
+        echo -e "$cluster_name\t$contig_name\t$contig_size\t$contig_depth\t$tipo" >> "$output_file"
     done
 done
 
-echo "📄 Reporte de contigs guardado en: $output_file"
-
-# 📌 🗑️ Eliminar clusters rechazados
-echo "🗑️ Eliminando clusters rechazados..."
-declare -A rejected_clusters
-
-while IFS=$'\t' read -r cluster contig size depth status; do
-    if [[ "$status" == "RECHAZADO" ]]; then
-        rejected_clusters["$cluster"]=1
+# Guardar listas por tipo
+for cluster in "${!cluster_types[@]}"; do
+    tipo=${cluster_types["$cluster"]}
+    if [[ "$tipo" == "CROMOSOMA" ]]; then
+        echo "$cluster" >> "$chromosome_list"
+    elif [[ "$tipo" == "PLÁSMIDO" ]]; then
+        echo "$cluster" >> "$plasmid_list"
     fi
-done < "$output_file"
-
-for cluster in "${!rejected_clusters[@]}"; do
-    echo "❌ Eliminando $cluster..."
-    rm -rf "${clustering_dir}/${cluster}"
 done
 
-echo "✅ Proceso de filtrado, copia y eliminación completado."
+# Copiar clusters a carpetas separadas
+mkdir -p "${clustering_dir}_chromosome"
+mkdir -p "${clustering_dir}_plasmid"
+
+while IFS= read -r cluster; do
+    cp -r "$cluster" "${clustering_dir}_chromosome/"
+done < "$chromosome_list"
+
+while IFS= read -r cluster; do
+    cp -r "$cluster" "${clustering_dir}_plasmid/"
+done < "$plasmid_list"
+
+echo "✅ Clasificación completada:"
+echo " - Contigs: $output_file"
+echo " - Chromosome clusters → ${clustering_dir}_chromosome/"
+echo " - Plasmid clusters    → ${clustering_dir}_plasmid/"
