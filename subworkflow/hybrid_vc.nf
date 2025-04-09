@@ -68,9 +68,9 @@ include { AMR_2 as POST_ANALYSIS_AMRFINDER            }     from '../bin/AMR/AMR
 workflow hybrid_vc {
     preprocess_output = pre_process()
     assambleprocess_output = assamble_process(preprocess_output.trimming_files_ch)
-    
+   
     post_analysis_output = post_analysis(assambleprocess_output.consensus_ch)
-    /* 
+     /* 
     vcprocess_output = workflow_vc()
     amrprocess_output = workflow_amr( preprocess_output.contigs_ch)
     */
@@ -130,11 +130,16 @@ workflow assamble_process {
 
 
     trycycler_ch = MERGE_ASSEMBLE(trycyler_input_ch)
-   
-    merge_ch = params.merge
 
-    reconcile_ch = RECONCILE_ASSEMBLE(merge_ch, reads_for_try_ch)
+    merge_cluster001_ch = trycycler_ch.chrom_clusters.map { sample_code, barcode_id, cluster_dir ->
+        def cluster001_path = cluster_dir.resolve('cluster_001')
+        tuple(sample_code, barcode_id, cluster001_path)
+    }
 
+    merge_cluster001_ch.view()
+
+    reconcile_ch = RECONCILE_ASSEMBLE(merge_cluster001_ch, reads_for_try_ch)
+    
     msa_ch = MSA(reconcile_ch.reconciled_dir)
 
     partition_ch = PARTITION(msa_ch.msa_dir, trimming_files_ch)
@@ -172,7 +177,6 @@ workflow post_analysis {
     AMR_2(polishing_ch)
     PROKKA(polishing_ch)
     BUSCO(polishing_ch)
-
 
 }
 

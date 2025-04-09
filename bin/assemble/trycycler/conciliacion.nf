@@ -6,7 +6,7 @@ process RECONCILE_ASSEMBLE {
     container "$params.trycyler.docker"
 
     input:
-    path(contigs_dir)
+    tuple val(sample_code), val(barcode_id), path(contigs_dir)
     tuple val(sample_code), val(barcode_id), path(barcodefile), val (genome_size)
 
     output:
