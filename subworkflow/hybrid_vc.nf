@@ -136,8 +136,6 @@ workflow assamble_process {
         tuple(sample_code, barcode_id, cluster001_path)
     }
 
-    merge_cluster001_ch.view()
-
     reconcile_ch = RECONCILE_ASSEMBLE(merge_cluster001_ch, reads_for_try_ch)
     
     msa_ch = MSA(reconcile_ch.reconciled_dir)

@@ -9,3 +9,14 @@ task_id	hash	native_id	name	status	exit	submit	duration	realtime	%cpu	peak_rss	p
 8	8e/d0f1a9	3895807	hybrid_vc:assamble_process:MERGE_ASSEMBLE (Merge assemble using Trycycler AB306)	CACHED	0	2025-03-31 11:29:24.456	6m 3s	6m 1s	740.9%	3.1 GB	7.6 GB	18.8 GB	568.3 MB
 9	d3/e36522	2110431	hybrid_vc:assamble_process:MOB_SUITE (MOB-suite on barcode20)	CACHED	0	2025-03-31 13:27:28.558	6m 43s	6m 41s	127.8%	3.8 GB	45.2 GB	21.1 GB	19.4 GB
 10	79/c03d14	3379213	hybrid_vc:assamble_process:RECONCILE_ASSEMBLE (Reconcile assemblies for barcode AB306)	COMPLETED	0	2025-04-09 10:18:06.555	21.9s	21s	144.5%	881.5 MB	29.4 GB	152.8 MB	110.4 MB
+11	39/47d80f	3390261	hybrid_vc:assamble_process:MSA (Multiple Sequence Alignment for AB306)	COMPLETED	0	2025-04-09 10:18:28.476	26.3s	25.4s	595.2%	996.2 MB	54.2 GB	81.6 MB	27.2 MB
+12	f4/cea87a	3405389	hybrid_vc:assamble_process:PARTITION (Partitioning reads for AB306)	COMPLETED	0	2025-04-09 10:18:54.780	39.6s	38.6s	1121.9%	699.2 MB	5.7 GB	3.1 GB	811.3 MB
+13	cd/9714d1	3422705	hybrid_vc:assamble_process:CONSENSUS (Generating final consensus for AB306)	COMPLETED	0	2025-04-09 10:19:34.530	55.4s	54.2s	921.6%	1.8 GB	6.6 GB	2.5 GB	153.8 MB
+14	4d/f07baf	3444503	hybrid_vc:post_analysis:ALIGN_SHORT_READS (Aligning short reads for AB1)	COMPLETED	0	2025-04-09 10:20:30.005	2m 1s	2m	325.4%	1.4 GB	2 GB	2.6 GB	2.3 GB
+15	56/be0f2d	3487119	hybrid_vc:post_analysis:FILTER_ALIGNMENTS (Filtering alignments with Polypolish for AB1)	COMPLETED	0	2025-04-09 10:22:31.200	42.7s	37.3s	99.2%	2.5 GB	2.5 GB	2.6 GB	1.3 GB
+16	5f/2c388e	3503518	hybrid_vc:post_analysis:POLISH (Polishing consensus with Polypolish for AB1)	COMPLETED	0	2025-04-09 10:23:13.917	20.4s	19.3s	99.4%	315.6 MB	338.6 MB	1.3 GB	3.8 MB
+18	4d/482ceb	3512279	hybrid_vc:post_analysis:QUAST (QC_ASSEMBLE)	COMPLETED	0	2025-04-09 10:23:34.340	13.8s	12.8s	52.9%	92.9 MB	6.6 GB	117.6 MB	8.1 MB
+21	96/df7903	3512292	hybrid_vc:post_analysis:BUSCO (GENOME COMPLETENESS)	COMPLETED	0	2025-04-09 10:23:34.352	29.7s	28.3s	118.1%	267.9 MB	13.3 GB	355 MB	69.6 MB
+20	e2/e9d490	3519593	hybrid_vc:post_analysis:AMR (ABRICATE PROCESS)	COMPLETED	0	2025-04-09 10:23:48.117	18.8s	17.7s	93.1%	92.1 MB	121.3 MB	35.2 MB	15.2 MB
+19	9a/1f7bd3	3529953	hybrid_vc:post_analysis:AMR_2 (AMRFinder PROCESS)	COMPLETED	0	2025-04-09 10:24:06.958	1m 29s	1m 28s	360.9%	234.1 MB	468 MB	29 MB	17.6 MB
+17	96/0ed115	3528211	hybrid_vc:post_analysis:PROKKA (PROKKA ANNOTATION)	COMPLETED	0	2025-04-09 10:24:04.053	2m 11s	2m 9s	502.2%	1.2 GB	23.9 GB	76.5 GB	103.4 MB
