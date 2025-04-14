@@ -10,7 +10,7 @@ process SUB_SAMPLE {
 
     output:
 
-    tuple val(barcode_id), path("combine_${barcode_id}.fastq")
+    tuple val(barcode_id), path("*")
 
 
     script:
@@ -22,7 +22,23 @@ process SUB_SAMPLE {
         --out_dir subsample_${barcode_id} \
         --genome_size ${genome_size}
     
-    cat subsample_${barcode_id}/*.fastq > combine_${barcode_id}.fastq
     """
 
+}
+
+process COMBINE_SUBSAMPLED_READS {
+    tag "Combine subsampled reads - ${barcode_id}"
+
+    container "$params.trycyler.docker"
+
+    input:
+    tuple val(barcode_id), path(subsample_dir)
+
+    output:
+    tuple val(barcode_id), path("combine_${barcode_id}.fastq")
+
+    script:
+    """
+    cat ${subsample_dir}/*.fastq > combine_${barcode_id}.fastq
+    """
 }

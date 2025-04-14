@@ -20,7 +20,7 @@ Configuration environemnt:
 
 include { QC                                          }     from '../bin/qc/main'
 include { TRIMMING                                    }     from '../bin/trimming/main'
-include { SUB_SAMPLE                                  }     from '../bin/assemble/trycycler/subsample_main'
+include { SUB_SAMPLE;COMBINE_SUBSAMPLED_READS         }     from '../bin/assemble/trycycler/subsample_main'
 include { SUB_SAMPLE_1                                }     from '../bin/assemble/canu/main'
 include { SUB_SAMPLE_2                                }     from '../bin/assemble/fly/main'
 include { SUB_SAMPLE_3                                }     from '../bin/assemble/raven/main'
@@ -100,14 +100,14 @@ workflow assamble_process {
                           .collectEntries { row -> [(row.barcode): row.genome_size]}
 
     subsample_trycycler_ch = SUB_SAMPLE(trimming_files_ch, genome_size_map)
-    
+    collect_subsample_ch = COMBINE_SUBSAMPLED_READS(subsample_trycycler_ch)
+
     genome_size_ch = Channel
                         .fromPath(params.genome_size_file)
                         .splitCsv(header: true)
                         .map { row -> tuple(row.barcode, row.genome_size as int, row.sample_code) }
 
-    reads_with_size_ch = subsample_trycycler_ch.join(genome_size_ch)
-
+    reads_with_size_ch = collect_subsample_ch.join(genome_size_ch)
 
     //Canu assemble
     sub_sample_1_canu_ch = SUB_SAMPLE_1(reads_with_size_ch)
@@ -145,6 +145,7 @@ workflow assamble_process {
     consensus_ch = CONSENSUS(partition_ch.partition_dir)
 
     plasmid_process_ch = MOB_SUITE(trycycler_ch.plasmid_clusters)
+
 
     emit:
     consensus_ch

@@ -1,0 +1,20 @@
+FROM ubuntu:22.04
+
+LABEL maintainer="tu_email@example.com"
+LABEL description="Docker image with Autocycler"
+
+# Instala dependencias
+RUN apt-get update && \
+    apt-get install -y wget tar && \
+    apt-get clean
+
+# Descarga e instala Autocycler
+RUN wget https://github.com/rrwick/Autocycler/releases/download/v0.3.0/autocycler-linux-x86_64-musl-v0.3.0.tar.gz && \
+    tar -xzf autocycler-linux-x86_64-musl-v0.3.0.tar.gz && \
+    mv autocycler /usr/local/bin/ && \
+    rm autocycler-linux-x86_64-musl-v0.3.0.tar.gz
+
+# Establece el directorio de trabajo
+WORKDIR /data
+
+CMD ["/bin/bash"]
