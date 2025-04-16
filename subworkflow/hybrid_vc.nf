@@ -68,9 +68,9 @@ include { AMR_2 as POST_ANALYSIS_AMRFINDER            }     from '../bin/AMR/AMR
 workflow hybrid_vc {
     preprocess_output = pre_process()
     assambleprocess_output = assamble_process(preprocess_output.trimming_files_ch)
-   
-    post_analysis_output = post_analysis(assambleprocess_output.consensus_ch)
      /* 
+    post_analysis_output = post_analysis(assambleprocess_output.consensus_ch)
+   
     vcprocess_output = workflow_vc()
     amrprocess_output = workflow_amr( preprocess_output.contigs_ch)
     */
@@ -107,15 +107,21 @@ workflow assamble_process {
                         .splitCsv(header: true)
                         .map { row -> tuple(row.barcode, row.genome_size as int, row.sample_code) }
 
+    
     reads_with_size_ch = collect_subsample_ch.join(genome_size_ch)
+    .map { barcode_id, barcode_file, genome_size, sample_code ->
+        tuple(barcode_id, barcode_file, genome_size, sample_code)
+    }
+
+    reads_with_size_ch.view()
 
     //Canu assemble
     sub_sample_1_canu_ch = SUB_SAMPLE_1(reads_with_size_ch)
-    
+        
     //Fly assemble
     sub_sample_2_fly_ch = SUB_SAMPLE_2(reads_with_size_ch)
 
-  //Raven assemble
+    //Raven assemble
     sub_sample_3_raven_ch = SUB_SAMPLE_3(reads_with_size_ch)
 
 
