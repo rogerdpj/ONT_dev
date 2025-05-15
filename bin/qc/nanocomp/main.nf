@@ -14,7 +14,7 @@ process NANOCOMP {
     script:
 
     """
-    
+    source activate nanopore    
     NanoComp --fastq ${barcode_dir} ${barcode_id_clean} -o Nanocomp
     
     """

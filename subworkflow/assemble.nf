@@ -115,10 +115,12 @@ coverage_ch = fly_ch.info_cov
     prokka_ch = PROKKA (medaka_consensum_ch.assemble_medaka)
 
     busco_ch = BUSCO(medaka_consensum_ch.assemble_medaka)
-
+    
     quast_ch = QUAST(medaka_consensum_ch.assemble_medaka)
 
-    multiqc_ch = MULTIQC( quast_ch, busco_ch)
+    //MULTIQC Directory for analysis
+
+    multiqc_ch = MULTIQC( busco_ch.map{i -> i[1]}.collect(), quast_ch.map{i -> i[1]}.collect())
 
     emit:
     consensum_file_ch

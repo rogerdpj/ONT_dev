@@ -12,7 +12,7 @@ process TRIMMING {
     // Define default parameter values with fallback
     def min_length = params.min_length ?: 1000
     def keep_percent = params.keep_percent ?: 90
-    def min_mean_q = params.min_mean_q ?: 12 
+    def min_mean_q = params.min_mean_q ?: 10
     
     script:
     """
