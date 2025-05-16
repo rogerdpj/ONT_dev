@@ -7,13 +7,13 @@ process SUB_SAMPLE_3 {
 
   script:
   """
-    # Verificar que el archivo de lectura existe y no está vacío
+    # Doble check all the inputs are corrects and no empty
     if [[ ! -s "${barcode_file}" ]]; then
         echo "❌ ERROR: El archivo de lectura '${barcode_file}' está vacío o no existe." >&2
         exit 1
     fi
 
-    # Descomprimir si es necesario
+    # unzip just in case is neccesary
     if [[ "${barcode_file}" == *.gz ]]; then
         gunzip -c "${barcode_file}" > input_reads.fastq
     else
@@ -22,7 +22,7 @@ process SUB_SAMPLE_3 {
 
     mkdir -p raven_output_${sample_code}
 
-    # Llamada simplificada a Raven sin flags no soportados
+    # Comman run RAVEN
     raven input_reads.fastq --threads ${task.cpus} \
       > raven_output_${sample_code}/${sample_code}_assembly.fasta 2> raven_error.log
 
