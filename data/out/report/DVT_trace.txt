@@ -5,4 +5,3 @@ task_id	hash	native_id	name	status	exit	submit	duration	realtime	%cpu	peak_rss	p
 4	60/014a83	2217082	hybrid_vc:assamble_process:COMBINE_SUBSAMPLED_READS (Combine subsampled reads - barcode01)	CACHED	0	2025-04-15 13:02:09.599	31.6s	24.1s	76.2%	4.6 MB	7.1 MB	4.5 GB	4.5 GB
 7	65/2a5f3f	2229980	hybrid_vc:assamble_process:SUB_SAMPLE_1 (Assemble with Canu - RTC_86)	CACHED	0	2025-04-15 13:02:41.438	9h 19m 37s	9h 19m 30s	393.1%	8.4 GB	9.8 GB	846.8 GB	19.1 GB
 6	97/3e6793	3825984	hybrid_vc:assamble_process:SUB_SAMPLE_2 (ASSAMBLE FLY LONG READS RTC_86)	CACHED	0	2025-04-16 10:53:13.796	28m 39s	28m 22s	287.1%	8.9 GB	13 GB	9.9 GB	2.7 GB
-5	2a/0ce185	3304807	hybrid_vc:assamble_process:SUB_SAMPLE_3 (Assemble with Raven - barcode01)	FAILED	1	2025-05-16 12:48:45.086	761ms	660ms	-	-	-	-	-

@@ -1,15 +1,13 @@
 process SUB_SAMPLE_3 {
-    tag "Assemble with Raven - ${barcode_id}"
-
-    input:
+  tag "Assemble with Raven - ${barcode_id}"
+  input:
     tuple val(barcode_id), path(barcode_file), val(genome_size), val(sample_code)
-
-    output:
+  output:
     tuple val(sample_code), path("raven_output_${sample_code}.fasta"), emit: raven_aseembly_file
 
-    script:
-    """
-        # Verificar que el archivo de lectura existe y no está vacío
+  script:
+  """
+    # Verificar que el archivo de lectura existe y no está vacío
     if [[ ! -s "${barcode_file}" ]]; then
         echo "❌ ERROR: El archivo de lectura '${barcode_file}' está vacío o no existe." >&2
         exit 1
@@ -23,8 +21,12 @@ process SUB_SAMPLE_3 {
     fi
 
     mkdir -p raven_output_${sample_code}
-    raven input_reads.fastq --threads ${task.cpus} --drop-reads --disable-checkpoints > raven_output_${sample_code}/${sample_code}_assembly.fasta 2> raven_error.log
-    mv raven_output_${sample_code}/${sample_code}_assembly.fasta raven_output_${sample_code}.fasta 
-    """
-}
 
+    # Llamada simplificada a Raven sin flags no soportados
+    raven input_reads.fastq --threads ${task.cpus} \
+      > raven_output_${sample_code}/${sample_code}_assembly.fasta 2> raven_error.log
+
+    mv raven_output_${sample_code}/${sample_code}_assembly.fasta \
+       raven_output_${sample_code}.fasta
+  """
+}
