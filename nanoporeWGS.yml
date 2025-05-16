@@ -1,8 +1,4 @@
 name: nanopore
-channels:
-  - conda-forge
-  - bioconda
-  - defaults
 channels:                                                                   
   - bioconda                                                                
   - defaults                                                                
@@ -316,5 +312,4 @@ dependencies:
   - zstd=1.5.6=ha6fb4c9_0
   - pip:
       - nanocomp==1.24.2
-      - psutil==6.1.1
-prefix: /home/jlucas/.conda/envs/nanopore
+      - psutil==7.0.0

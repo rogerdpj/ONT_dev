@@ -134,7 +134,8 @@ workflow assamble_process {
         .join(sub_sample_2_fly_ch.fly_assambly_tuple)
         .join(sub_sample_3_raven_ch.raven_aseembly_file)
 
-
+    trycyler_input_ch.view()
+    /*
     trycycler_ch = MERGE_ASSEMBLE(trycyler_input_ch)
 
     merge_cluster001_ch = trycycler_ch.chrom_clusters.map { sample_code, barcode_id, cluster_dir ->
@@ -155,7 +156,6 @@ workflow assamble_process {
 
     emit:
     consensus_ch
-
 }
 
 workflow post_analysis {
@@ -182,7 +182,7 @@ workflow post_analysis {
     AMR_2(polishing_ch)
     PROKKA(polishing_ch)
     BUSCO(polishing_ch)
-
+    */
 }
 
 
