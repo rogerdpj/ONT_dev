@@ -8,6 +8,8 @@ WORKDIR /tmp
 
 RUN conda env create -f nanoporeWGS.yml
 
+RUN conda run -n nanopore pip install NanoComp
+
 RUN echo "conda activate nanopore" >> ~/.bashrc
 
 ENV PATH /opt/conda/envs/nanopore/bin:$PATH
