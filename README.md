@@ -174,10 +174,7 @@ nextflow run main.nf --mode assemble --genome_size_file barcode_info.csv --input
 
 [Assembling the perfect bacterial genome using Oxford Nanopore and Illumina sequencing](https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1010905)
 
-
-
-
-
+[Autocylcler](https://github.com/rrwick/Autocycler)
 
 
 
