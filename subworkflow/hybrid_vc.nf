@@ -20,12 +20,25 @@ Configuration environemnt:
 
 include { QC                                          }     from '../bin/qc/main'
 include { TRIMMING                                    }     from '../bin/trimming/main'
-include { SUB_SAMPLE                                  }     from '../bin/assemble/trycycler/subsample_main'
+include { SUB_SAMPLE;COMBINE_SUBSAMPLED_READS         }     from '../bin/assemble/trycycler/subsample_main'
 include { SUB_SAMPLE_1                                }     from '../bin/assemble/canu/main'
 include { SUB_SAMPLE_2                                }     from '../bin/assemble/fly/main'
 include { SUB_SAMPLE_3                                }     from '../bin/assemble/raven/main'
 include { MERGE_ASSEMBLE                              }     from '../bin/assemble/trycycler/merge_subsample'
+include { RECONCILE_ASSEMBLE                          }     from '../bin/assemble/trycycler/conciliacion'
+include { MSA                                         }     from '../bin/assemble/trycycler/msa'
+include { PARTITION                                   }     from '../bin/assemble/trycycler/partition'
+include { CONSENSUS                                   }     from '../bin/assemble/trycycler/consensus'
+include { MOB_SUITE                                   }     from '../bin/plasmid/mob/main'
+include { TRIMMING as SHORT_TRIMMING                  }     from '../bin/trimming/short_trimming'
+include { ALIGN_SHORT_READS;FILTER_ALIGNMENTS;POLISH  }     from '../bin/polishing/main_2'
+include { QUAST                                       }     from '../bin/qc/quast/main'
+include { AMR                                         }     from '../bin/AMR/abricate/main'
+include { AMR_2                                       }     from '../bin/AMR/resfinder/main'
+include { PROKKA                                      }     from '../bin/annotation/prokka/main'
+include { BUSCO                                       }     from '../bin/qc/busco/main'
 /*
+
 
 include { POLISHING_1                                 }     from '../bin/assemble/main'
 include { CONSENSUM                                   }     from '../bin/assemble/main'
@@ -54,8 +67,10 @@ include { AMR_2 as POST_ANALYSIS_AMRFINDER            }     from '../bin/AMR/AMR
 
 workflow hybrid_vc {
     preprocess_output = pre_process()
-    assambleprocess_output = assamble_process(preprocess_output.trimming_ch)
-     /*
+    assambleprocess_output = assamble_process(preprocess_output.trimming_files_ch)
+     /* 
+    post_analysis_output = post_analysis(assambleprocess_output.consensus_ch)
+   
     vcprocess_output = workflow_vc()
     amrprocess_output = workflow_amr( preprocess_output.contigs_ch)
     */
@@ -67,15 +82,16 @@ workflow pre_process {
     barcode_dir_ch = channel.fromPath(params.input, type: 'dir').map{barcode_dir -> tuple(barcode_dir.baseName, barcode_dir)}
     qc_ch = QC(barcode_dir_ch)
     trimming_ch = TRIMMING(qc_ch.fastq_combine)
+    trimming_files_ch = trimming_ch.barcodefile_gz
 
     emit:
-    trimming_ch
+    trimming_files_ch
 
 }
 
 workflow assamble_process {
     take:
-    trimming_ch
+    trimming_files_ch
     
     main:
 
@@ -83,59 +99,89 @@ workflow assamble_process {
                           .splitCsv(header:true)
                           .collectEntries { row -> [(row.barcode): row.genome_size]}
 
-    subsample_trycycler_ch = SUB_SAMPLE(trimming_ch, genome_size_map)
-    
+    subsample_trycycler_ch = SUB_SAMPLE(trimming_files_ch, genome_size_map)
+    collect_subsample_ch = COMBINE_SUBSAMPLED_READS(subsample_trycycler_ch)
+
     genome_size_ch = Channel
                         .fromPath(params.genome_size_file)
                         .splitCsv(header: true)
                         .map { row -> tuple(row.barcode, row.genome_size as int, row.sample_code) }
 
-    reads_with_size_ch = subsample_trycycler_ch.join(genome_size_ch)
+    
+    reads_with_size_ch = collect_subsample_ch.join(genome_size_ch)
+    .map { barcode_id, barcode_file, genome_size, sample_code ->
+        tuple(barcode_id, barcode_file, genome_size, sample_code)
+    }
+
+    reads_with_size_ch.view()
 
     //Canu assemble
     sub_sample_1_canu_ch = SUB_SAMPLE_1(reads_with_size_ch)
-    
+        
     //Fly assemble
     sub_sample_2_fly_ch = SUB_SAMPLE_2(reads_with_size_ch)
 
-  //Raven assemble
+    //Raven assemble
     sub_sample_3_raven_ch = SUB_SAMPLE_3(reads_with_size_ch)
-   
-    trycyler_input_ch = reads_with_size_ch
+
+
+    reads_for_try_ch = reads_with_size_ch.map { barcode_id, barcodefile, genome_size, sample_code -> 
+    tuple(sample_code, barcode_id, barcodefile, genome_size)}
+
+    
+    trycyler_input_ch = reads_for_try_ch
         .join(sub_sample_1_canu_ch.assembly_canu_file)
         .join(sub_sample_2_fly_ch.fly_assambly_tuple)
         .join(sub_sample_3_raven_ch.raven_aseembly_file)
 
-
+    trycyler_input_ch.view()
+    /*
     trycycler_ch = MERGE_ASSEMBLE(trycyler_input_ch)
-    
-/*
-    //POLISHING
-     // Determinar el número máximo de rondas de pulido
-    def max_rounds = params.min_mean_q <= 14 ? 8 : 5
 
-    // Canal inicial con ensamblaje y lecturas constantes para cada barcode
-    polished_ch = genome_ch.map { barcode_id, input_fasta -> tuple(barcode_id, input_fasta, input_reads) }
-
-    // Bucle de pulido
-    polished_ch = (1..max_rounds).inject(polished_ch) { ch, round ->
-        ch.map { barcode_id, input_fasta, input_reads -> 
-            tuple(barcode_id, input_fasta, input_reads, round) 
-        }
-        .set { round_input_ch }  // Actualiza el canal de entrada para cada ronda
-
-        POLISHING_ROUND(round_input_ch)
-            .map { barcode_id, polished_fasta -> tuple(barcode_id, polished_fasta, input_reads) }
+    merge_cluster001_ch = trycycler_ch.chrom_clusters.map { sample_code, barcode_id, cluster_dir ->
+        def cluster001_path = cluster_dir.resolve('cluster_001')
+        tuple(sample_code, barcode_id, cluster001_path)
     }
 
-    // Al final, polished_ch tendrá el ensamblaje pulido final para cada barcode después del número especificado de rondas.
-    polished_ch.view()
-}
-
+    reconcile_ch = RECONCILE_ASSEMBLE(merge_cluster001_ch, reads_for_try_ch)
     
+    msa_ch = MSA(reconcile_ch.reconciled_dir)
+
+    partition_ch = PARTITION(msa_ch.msa_dir, trimming_files_ch)
+
+    consensus_ch = CONSENSUS(partition_ch.partition_dir)
+
+    plasmid_process_ch = MOB_SUITE(trycycler_ch.plasmid_clusters)
 
 
     emit:
+    consensus_ch
+}
+
+workflow post_analysis {
+    
+    take:
+    consensus_ch
+
+    main:
+    // Canal de lecturas
+    read_ch = Channel.fromFilePairs(params.short_inputs, size: 2)
+    // Trimming de las lecturas
+    trimmed_read_ch = SHORT_TRIMMING(read_ch)
+    fq_gz_reads_ch = trimmed_read_ch.trimmed_reads
+
+    aligned_bam_ch = ALIGN_SHORT_READS(consensus_ch,fq_gz_reads_ch)
+
+    filtered_sam_ch = FILTER_ALIGNMENTS(aligned_bam_ch.aligned_sam1,aligned_bam_ch.aligned_sam2)
+
+    polishing_ch = POLISH (consensus_ch,filtered_sam_ch)
+
+    QUAST(polishing_ch)
+
+    AMR(polishing_ch)
+    AMR_2(polishing_ch)
+    PROKKA(polishing_ch)
+    BUSCO(polishing_ch)
     */
 }
 
