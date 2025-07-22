@@ -13,7 +13,7 @@ process AMR {
 
     script:
     """
-    DBS=("resfinder" "vfdb" "plasmidfinder" "card")
+    DBS=("resfinder" "vfdb_full" "plasmidfinder" "card" "ecoli_vf", "argannot")
 
     echo -e "FILE\tSEQUENCE\tSTART\tEND\tSTRAND\tGENE\tCOVERAGE\tCOVERAGE_MAP\tGAPS\t%COVERAGE\t%IDENTITY\tDATABASE\tACCESSION\tPRODUCT\tRESISTANCE" > ${sample_code}_combined_abricate_report.tsv
 
