@@ -1,6 +1,8 @@
 process TRIMMING {
     tag "prunning process"
     
+    publishDir "data/out/trimming", mode: 'copy'
+
     input:
     tuple val(barcode_id), path(fastq_file)
     
