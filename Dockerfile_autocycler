@@ -26,5 +26,8 @@ RUN curl -L -o autocycler.tar.gz $(curl -s https://api.github.com/repos/rrwick/A
     mv autocycler /opt/conda/envs/autocycler/bin/ && \
     rm autocycler.tar.gz
 
+RUN ln -s /opt/conda/envs/autocycler/bin/plassembler.py /opt/conda/envs/autocycler/bin/plassembler && \
+    chmod +x /opt/conda/envs/autocycler/bin/plassembler
+
 # Set default command to Autocycler help and show missing/installed tools.
 CMD ["/bin/sh", "-c", "autocycler --help; echo \"\nInstalled tools:\"; cat /tmp/installed_tools.txt; echo \"\nMissing tools:\"; cat /tmp/missing_tools.txt; echo"]
