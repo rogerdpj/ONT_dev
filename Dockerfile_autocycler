@@ -8,7 +8,7 @@ RUN apt-get update && apt-get install -y procps && rm -rf /var/lib/apt/lists/*
 # Create an "autocycler" environment with long-read assemblers.
 RUN micromamba create -y -n autocycler python=3.12 -c conda-forge -c bioconda curl && \
     micromamba install -y -n autocycler -c conda-forge -c bioconda \
-        canu flye lja metamdbg miniasm minimap2 minipolish necat nextdenovo nextpolish racon raven-assembler wtdbg any2fasta seqtk chopper && \
+        canu flye lja metamdbg miniasm minimap2 minipolish necat nextdenovo nextpolish racon raven-assembler wtdbg any2fasta seqtk chopper dnaapler && \
     micromamba install -y -n autocycler -c conda-forge -c bioconda plassembler && \
     ln -s /opt/conda/envs/autocycler/bin/plassembler.py /opt/conda/envs/autocycler/bin/plassembler && \
     chmod +x /opt/conda/envs/autocycler/bin/plassembler && \

@@ -21,17 +21,13 @@ Configuration environemnt:
 include { QC                                          }     from '../bin/qc/main'
 include { TRIMMING                                    }     from '../bin/trimming/main'
 include { AUTOCYCLER                                  }     from '../bin/assemble/autocycler/main'
-
-include { SUB_SAMPLE;COMBINE_SUBSAMPLED_READS         }     from '../bin/assemble/trycycler/subsample_main'
-include { SUB_SAMPLE_1                                }     from '../bin/assemble/canu/main'
-include { SUB_SAMPLE_2                                }     from '../bin/assemble/fly/main'
-include { SUB_SAMPLE_3                                }     from '../bin/assemble/raven/main'
-include { MERGE_ASSEMBLE                              }     from '../bin/assemble/trycycler/merge_subsample'
-include { RECONCILE_ASSEMBLE                          }     from '../bin/assemble/trycycler/conciliacion'
+include { DNAAPLER                                    }     from '../bin/assemble/autocycler/dnaapler'
+    /*
 include { MSA                                         }     from '../bin/assemble/trycycler/msa'
 include { PARTITION                                   }     from '../bin/assemble/trycycler/partition'
 include { CONSENSUS                                   }     from '../bin/assemble/trycycler/consensus'
 include { MOB_SUITE                                   }     from '../bin/plasmid/mob/main'
+*/
 include { TRIMMING as SHORT_TRIMMING                  }     from '../bin/trimming/short_trimming'
 include { ALIGN_SHORT_READS;FILTER_ALIGNMENTS;POLISH  }     from '../bin/polishing/main_2'
 include { QUAST                                       }     from '../bin/qc/quast/main'
@@ -70,9 +66,8 @@ include { AMR_2 as POST_ANALYSIS_AMRFINDER            }     from '../bin/AMR/AMR
 workflow hybrid {
     preprocess_output = pre_process()
     assambleprocess_output = assamble_process(preprocess_output.trimming_files_ch)
-     /* 
-    post_analysis_output = post_analysis(assambleprocess_output.consensus_ch)
-   
+    post_analysis_output = post_analysis(assambleprocess_output.dnaapler_ch)
+   /* 
     vcprocess_output = workflow_vc()
     amrprocess_output = workflow_amr( preprocess_output.contigs_ch)
     */
@@ -109,11 +104,9 @@ workflow assamble_process {
     }
     
     autocycler_ch = AUTOCYCLER(reads_with_size_ch)
-    
-    
-    
-    
-    
+
+    dnaapler_ch = DNAAPLER(autocycler_ch.final_gfa)
+
     
     
 /*    
@@ -153,7 +146,7 @@ workflow assamble_process {
         .join(sub_sample_3_raven_ch.raven_aseembly_file)
 
     trycyler_input_ch.view()
-    /*
+    
     trycycler_ch = MERGE_ASSEMBLE(trycyler_input_ch)
 
     merge_cluster001_ch = trycycler_ch.chrom_clusters.map { sample_code, barcode_id, cluster_dir ->
@@ -170,16 +163,18 @@ workflow assamble_process {
     consensus_ch = CONSENSUS(partition_ch.partition_dir)
 
     plasmid_process_ch = MOB_SUITE(trycycler_ch.plasmid_clusters)
-
+*/
 
     emit:
-    consensus_ch
+    dnaapler_ch
+    
 }
+
 
 workflow post_analysis {
     
     take:
-    consensus_ch
+    dnaapler_ch
 
     main:
     // Canal de lecturas
@@ -188,19 +183,22 @@ workflow post_analysis {
     trimmed_read_ch = SHORT_TRIMMING(read_ch)
     fq_gz_reads_ch = trimmed_read_ch.trimmed_reads
 
-    aligned_bam_ch = ALIGN_SHORT_READS(consensus_ch,fq_gz_reads_ch)
+    fq_gz_reads_ch.view()
+    dnaapler_ch.view()
+
+    aligned_bam_ch = ALIGN_SHORT_READS(dnaapler_ch,fq_gz_reads_ch)
 
     filtered_sam_ch = FILTER_ALIGNMENTS(aligned_bam_ch.aligned_sam1,aligned_bam_ch.aligned_sam2)
 
-    polishing_ch = POLISH (consensus_ch,filtered_sam_ch)
+    polishing_ch = POLISH (dnaapler_ch,filtered_sam_ch)
 
     QUAST(polishing_ch)
 
-    AMR(polishing_ch)
+    AMR(polishing_ch, params.organism)
     AMR_2(polishing_ch)
     PROKKA(polishing_ch)
     BUSCO(polishing_ch)
-    */
+
 }
 
 
