@@ -135,7 +135,7 @@ workflow amr_process {
 
     main:
     
-    amr_ch = AMR(consensum_file_ch)
+    amr_ch = AMR(consensum_file_ch, params.organism)
     amr_2_ch = AMR_2(consensum_file_ch)
     mlst_ch = MLST(consensum_file_ch)
     
