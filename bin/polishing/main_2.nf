@@ -1,8 +1,6 @@
 process ALIGN_SHORT_READS {
     tag "Aligning short reads for ${sample_code}"
 
-    publishDir "${params.outdir}/10-Polished/short_alignment", mode: 'copy'
-
     container "$params.short_wgs.docker"
 
     input:
@@ -33,8 +31,6 @@ process ALIGN_SHORT_READS {
 process FILTER_ALIGNMENTS {
     tag "Filtering alignments with Polypolish for ${sample_code}"
 
-    publishDir "${params.outdir}/10-filtered", mode: 'copy'
-
     container "$params.polypolish.docker"
 
     input:
@@ -54,8 +50,6 @@ process FILTER_ALIGNMENTS {
 
 process POLISH {
     tag "Polishing consensus with Polypolish for ${sample_code}"
-
-    publishDir "${params.outdir}/11-polished", mode: 'copy'
 
     container "$params.polypolish.docker"
 

@@ -3,7 +3,7 @@ process PROKKA {
 
     container "$params.prokka.docker"
     
-    publishDir "${params.outdir}/2-assemble/3-annotations", mode: 'copy', saveAs: { filename ->
+    publishDir "${params.outdir}/2-assemble/Annotations", mode: 'copy', saveAs: { filename ->
         if (filename.endsWith(".gff")) {
             return "prokka/${sample_code}/${sample_code}.gff"
         } else if (filename.endsWith(".faa")) {

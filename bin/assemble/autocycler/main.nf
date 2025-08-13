@@ -1,8 +1,7 @@
 process AUTOCYCLER {
+    tag "autocycler ${sample_code}"
 
     container "$params.autocycler.docker"
-
-    publishDir "data/out/2-autocycler", mode: 'copy'
 
     input:
     tuple val(barcode_id), path(reads), val(genome_size_map), val (sample_code)

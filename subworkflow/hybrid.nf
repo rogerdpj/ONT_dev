@@ -5,14 +5,15 @@ nextflow.enable.dsl=2
 
 log.info """\
 
-    WGS ONT - HYBRID VARIANT  CALLING
+    WGS ONT - HYBRID VARIANT CALLING
 
             P A R A M E T R E S
 ==============================================
 Configuration environemnt:
-    Out directory:             $params.outdir
-    Fastq directory:           $params.input
-    Reference directory:       $params.reference
+    Out directory:                  $params.outdir
+    ONT fastq directory:            $params.input
+    Illumina fastq directory:       $params.short_inputs
+    Organism:                       $params.organism
 """
     .stripIndent()
 
@@ -28,13 +29,21 @@ include { PARTITION                                   }     from '../bin/assembl
 include { CONSENSUS                                   }     from '../bin/assemble/trycycler/consensus'
 include { MOB_SUITE                                   }     from '../bin/plasmid/mob/main'
 */
+include { FASTQC_QUALITY as FASTQC_QUALITY_ORIGINAL   }     from '../bin/qc/fastqc/main'
 include { TRIMMING as SHORT_TRIMMING                  }     from '../bin/trimming/short_trimming'
+include { FASTQC_QUALITY as FASTQC_QUALITY_FINAL      }     from '../bin/qc/fastqc/main'
+include { MULTIQC_FASTQ                               }     from '../bin/qc/multiqc/main_2'
 include { ALIGN_SHORT_READS;FILTER_ALIGNMENTS;POLISH  }     from '../bin/polishing/main_2'
+include { WRAP                                        }     from '../bin/polishing/wrap'
 include { QUAST                                       }     from '../bin/qc/quast/main'
+include { BUSCO                                       }     from '../bin/qc/busco/main'
+include { MULTIQC                                     }     from '../bin/qc/multiqc/main'
 include { AMR                                         }     from '../bin/AMR/abricate/main'
 include { AMR_2                                       }     from '../bin/AMR/resfinder/main'
 include { PROKKA                                      }     from '../bin/annotation/prokka/main'
-include { BUSCO                                       }     from '../bin/qc/busco/main'
+include { BAKTA                                       }     from '../bin/annotation/bakta/main'
+include { AGT                                         }     from '../bin/annotation/main'
+
 /*
 
 
@@ -53,7 +62,6 @@ include { HAPLOTYPECALLER                             }     from '../bin/gatk/ha
 include { GENOTYPE as GENOTYPE_ANALYSIS               }     from '../bin/gatk/genotype/main'
 include { ALIGN as NORMALICE_WILDTYPE                 }     from '../bin/gatk/Filter/align'
 include { FILTER_VARIANTS as FILTER_VARIANTS_PARAM    }     from '../bin/gatk/Filter/main'
-include { AGT                                         }     from '../bin/anotations/main'
 include { DECOMPRESS_VCF                              }     from '../bin/snpeff/main_2'
 include { SNPEFF                                      }     from '../bin/snpeff/main'
 include { AMR as POST_ANALYSIS_ABRICATE               }     from '../bin/AMR/abricate/main'
@@ -105,10 +113,10 @@ workflow assamble_process {
     
     autocycler_ch = AUTOCYCLER(reads_with_size_ch)
 
-    dnaapler_ch = DNAAPLER(autocycler_ch.final_gfa)
+    dnaapler_all_ch = DNAAPLER(autocycler_ch.final_gfa)
+    dnaapler_ch = dnaapler_all_ch.reoriented_assembly
 
-    
-    
+
 /*    
     auticycler_ch = SUB_SAMPLE(trimming_files_ch, genome_size_map)
     collect_subsample_ch = COMBINE_SUBSAMPLED_READS(subsample_trycycler_ch)
@@ -179,12 +187,19 @@ workflow post_analysis {
     main:
     // Canal de lecturas
     read_ch = Channel.fromFilePairs(params.short_inputs, size: 2)
+   
+    fastqc_ch_original= FASTQC_QUALITY_ORIGINAL(read_ch.map{it -> it[1]})
+
     // Trimming de las lecturas
     trimmed_read_ch = SHORT_TRIMMING(read_ch)
     fq_gz_reads_ch = trimmed_read_ch.trimmed_reads
 
-    fq_gz_reads_ch.view()
-    dnaapler_ch.view()
+    //Final Quality control after trimming
+    fastq_ch_after = FASTQC_QUALITY_FINAL(fq_gz_reads_ch.map{it -> it[1]})
+
+    //MULTIQC
+    multiqc_ch = MULTIQC_FASTQ(fastqc_ch_original.qc_zip.collect(), fastq_ch_after.qc_zip.collect())
+
 
     aligned_bam_ch = ALIGN_SHORT_READS(dnaapler_ch,fq_gz_reads_ch)
 
@@ -192,12 +207,21 @@ workflow post_analysis {
 
     polishing_ch = POLISH (dnaapler_ch,filtered_sam_ch)
 
-    QUAST(polishing_ch)
+    wrap_ch = WRAP(polishing_ch)
 
-    AMR(polishing_ch, params.organism)
-    AMR_2(polishing_ch)
-    PROKKA(polishing_ch)
-    BUSCO(polishing_ch)
+
+    quast_ch = QUAST(wrap_ch)
+    busco_ch = BUSCO(wrap_ch)
+
+    multiqc_ch = MULTIQC(busco_ch.map{i -> i[1]}.collect(), quast_ch.map{i -> i[1]}.collect())
+
+    AMR(wrap_ch, params.organism)
+    AMR_2(wrap_ch)
+
+    prokka_annotation_ch = PROKKA(wrap_ch)
+    bakta_annotation_ch = BAKTA(wrap_ch)
+    AGT(prokka_annotation_ch.prokka_gff, bakta_annotation_ch.bakta_gff3, wrap_ch)
+    
 
 }
 

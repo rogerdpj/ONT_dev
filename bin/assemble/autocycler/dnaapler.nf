@@ -1,15 +1,16 @@
 process DNAAPLER {
+    tag "dnaapler ${sample_code}"
 
     container "$params.autocycler.docker"
 
-    publishDir "data/out/3-dnaapler", mode: 'copy'
+    publishDir "${params.outdir}/2-assemble/dnaapler", mode: 'copy'
 
     input:
     tuple val(sample_code), path(gfa_file)
 
     output:
     tuple val(sample_code), path("${sample_code}.fasta"), emit: reoriented_assembly
-
+    path("dnaapler/dnaapler_reoriented.gfa"), emit: reoriented_gfa
 
     script:
 
