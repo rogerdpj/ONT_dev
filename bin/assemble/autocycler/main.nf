@@ -3,13 +3,15 @@ process AUTOCYCLER {
 
     container "$params.autocycler.docker"
 
+    publishDir "${params.outdir}/2-assemble/autocycler", mode: 'copy', overwrite: true, only: ["metrics.tsv"]
+
     input:
     tuple val(barcode_id), path(reads), val(genome_size_map), val (sample_code)
 
     output:
     path("autocycler_out/consensus_assembly.fasta"), emit: final_assembly
     tuple val(sample_code), path("autocycler_out/consensus_assembly.gfa"), emit: final_gfa
-
+    path("metrics.tsv"), emit: metrics
 
     script:
 
@@ -49,6 +51,12 @@ process AUTOCYCLER {
     autocycler combine \\
       --autocycler_dir autocycler_out \\
       --in_gfas autocycler_out/clustering/qc_pass/cluster_*/5_final.gfa
+
+    # Step 6: Autocycler Table
+
+    TABLE=metrics.tsv
+    autocycler table > \$TABLE #Create the header
+    autocycler table --autocycler_dir autocycler_out --name "${sample_code}" >> \$TABLE
 
     """
 }
