@@ -3,7 +3,13 @@ process MEDAKA {
 
     container "$params.medaka.docker"
 
-    publishDir "${params.outdir}/2-assemble/2-medaka_results", mode: 'copy'
+    publishDir "${params.outdir}/2-Assembly", mode: 'copy', saveAs: { filename ->
+        if (filename.endsWith(".fasta")) {
+            return "${sample_code}_consensus.fasta"
+        } else {
+            return "2-Medaka_results/${sample_code}/"
+        }
+    }
     
     input:
     tuple val(sample_code), path(trimmed_reads), path(final_polishing_fasta)
