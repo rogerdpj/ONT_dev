@@ -19,8 +19,8 @@ Configuration environment:
 
 if (params.mode == 'assemble') {
     include { assemble } from "$projectDir/subworkflow/assemble" 
-} else if (params.mode == 'hybrid_amr') {
-    include { hybrid_amr } from "$projectDir/subworkflow/hybrid_amr"
+} else if (params.mode == 'hybrid') {
+    include { hybrid } from "$projectDir/subworkflow/hybrid"
 } else if (params.mode == 'hybrid_vc') {
     include { hybrid_vc} from "$projectDir/subworkflow/hybrid_vc"
 } else {
@@ -31,8 +31,8 @@ if (params.mode == 'assemble') {
 workflow {
     if (params.mode == 'assemble') {
         assemble()  
-    } else if (params.mode == 'hybrid_amr') {
-        hybrid_amr()
+    } else if (params.mode == 'hybrid') {
+        hybrid()
     } else if (params.mode == 'hybrid_vc') {
         hybrid_vc()
     }
