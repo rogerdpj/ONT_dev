@@ -3,7 +3,7 @@ process AGT {
 
     container "$params.agat.docker"
 
-    publishDir "${params.outdir}/2-assemble/Annotations", mode: 'copy'
+    publishDir "${params.outdir}/2-Assembly/Annotations", mode: 'copy'
     
     input:
     path prokka_file

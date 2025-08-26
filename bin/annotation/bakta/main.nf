@@ -2,7 +2,7 @@ process BAKTA {
     tag "BAKTA ANNOTATIONS"
     container params.bakta.docker
 
-    publishDir "${params.outdir}/2-assemble/Annotations", mode: 'copy', saveAs: { filename ->
+    publishDir "${params.outdir}/2-Assembly/3-Annotations", mode: 'copy', saveAs: { filename ->
         if (filename.endsWith(".gff3")) {
             return "bakta/${sample_code}/${sample_code}.gff3"
         } else if (filename.endsWith(".faa")) {

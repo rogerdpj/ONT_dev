@@ -3,7 +3,7 @@ process DNAAPLER {
 
     container "$params.autocycler.docker"
 
-    publishDir "${params.outdir}/2-assemble/dnaapler", mode: 'copy'
+    publishDir "${params.outdir}/2-Assembly/2-Dnaapler", mode: 'copy'
 
     input:
     tuple val(sample_code), path(gfa_file)

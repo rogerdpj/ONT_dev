@@ -3,7 +3,7 @@ process AUTOCYCLER {
 
     container "$params.autocycler.docker"
 
-    publishDir "${params.outdir}/2-assemble/autocycler", mode: 'copy', overwrite: true, only: ["metrics.tsv"]
+    publishDir "${params.outdir}/2-Assembly/1-Autocycler", mode: 'copy', overwrite: true, only: ["metrics.tsv"]
 
     input:
     tuple val(barcode_id), path(reads), val(genome_size_map), val (sample_code)
@@ -28,7 +28,7 @@ process AUTOCYCLER {
     # Step 2: Generating input assemblies
     
     mkdir assemblies
-    for assembler in canu flye metamdbg miniasm necat nextdenovo raven; do
+    for assembler in plassembler canu flye metamdbg miniasm necat nextdenovo raven; do
       for i in 01 02 03 04; do
         autocycler helper \$assembler --reads subsampled_reads/sample_\${i}.fastq --out_prefix assemblies/\${assembler}_\${i} --threads ${task.cpus} --genome_size ${genome_size_map}
       done

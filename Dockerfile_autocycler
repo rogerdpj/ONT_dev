@@ -1,27 +1,41 @@
 FROM mambaorg/micromamba:latest
 
-USER root 
+USER root
 
 # Install procps so 'ps' is available for Nextflow
 RUN apt-get update && apt-get install -y procps && rm -rf /var/lib/apt/lists/*
 
-# Create an "autocycler" environment with long-read assemblers.
-RUN micromamba create -y -n autocycler python=3.12 -c conda-forge -c bioconda curl && \
-    micromamba install -y -n autocycler -c conda-forge -c bioconda \
-        canu flye lja metamdbg miniasm minimap2 minipolish necat nextdenovo nextpolish racon raven-assembler wtdbg any2fasta seqtk chopper dnaapler && \
-    micromamba install -y -n autocycler -c conda-forge -c bioconda plassembler && \
-    ln -s /opt/conda/envs/autocycler/bin/plassembler.py /opt/conda/envs/autocycler/bin/plassembler && \
-    chmod +x /opt/conda/envs/autocycler/bin/plassembler && \
+# Create environment and install tools from conda-forge and bioconda
+RUN micromamba create -y -n autocycler -c conda-forge -c bioconda \
+      python=3.12 curl pip && \
+    micromamba run -n autocycler micromamba install -y -c conda-forge -c bioconda \
+      just poetry ripgrep \
+      canu=2.3 \
+      flye metamdbg miniasm minimap2 minipolish necat nextdenovo nextpolish \
+      unicycler racon raven-assembler wtdbg any2fasta mash seqtk chopper \
+      fastp=1.0.1 libdeflate=1.23 dnaapler myloasm && \
     micromamba clean --all --yes
+
+
+# Install latest plassembler from PyPI (not Bioconda!)
+RUN micromamba run -n autocycler pip install plassembler
+
+RUN micromamba run -n autocycler bash -c "\
+  export PLASSEMBLER_DB=/opt/conda/envs/autocycler/plassembler_db && \
+  mkdir -p \$PLASSEMBLER_DB && \
+  plassembler download -d \$PLASSEMBLER_DB --force"
 
 # Add the autocycler environment to PATH.
 ENV PATH="/opt/conda/envs/autocycler/bin:$PATH"
+ENV PLASSEMBLER_DB="/opt/conda/envs/autocycler/plassembler_db"
+ENV TERM=xterm-256color
 
-# Download and install Autocycler (binary and scripts) from the latest release.
+
+# Download and install latest release of Autocycler
 RUN curl -L -o autocycler.tar.gz $(curl -s https://api.github.com/repos/rrwick/Autocycler/releases/latest | grep "browser_download_url.*linux-x86_64-musl.*tar.gz" | cut -d '"' -f 4) && \
     tar -xzf autocycler.tar.gz && \
     mv autocycler /opt/conda/envs/autocycler/bin/ && \
     rm autocycler.tar.gz
-
-# Set default command to Autocycler help and show missing/installed tools.
+    
+# Default command
 CMD ["/bin/sh", "-c", "autocycler --help; echo \"\nInstalled tools:\"; cat /tmp/installed_tools.txt; echo \"\nMissing tools:\"; cat /tmp/missing_tools.txt; echo"]
