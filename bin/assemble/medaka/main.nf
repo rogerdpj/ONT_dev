@@ -5,7 +5,7 @@ process MEDAKA {
 
     publishDir "${params.outdir}/2-Assembly", mode: 'copy', saveAs: { filename ->
         if (filename.endsWith(".fasta")) {
-            return "${sample_code}_consensus.fasta"
+            return null
         } else {
             return "2-Medaka_results/${sample_code}/"
         }

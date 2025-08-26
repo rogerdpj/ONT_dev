@@ -22,7 +22,10 @@ include { NANOCOMP                                      }     from '../bin/qc/na
 include { SUB_SAMPLE_2 as ASSEMBLE                      }     from '../bin/assemble/fly/main'
 include { POLISHING_ROUND                               }     from '../bin/polishing/main'
 include { MEDAKA                                        }     from '../bin/assemble/medaka/main'
+include { WRAP                                          }     from '../bin/polishing/wrap_2'
 include { PROKKA                                        }     from '../bin/annotation/prokka/main'
+include { BAKTA                                         }     from '../bin/annotation/bakta/main_2'
+include { AGT                                           }     from '../bin/annotation/main_2'
 include { BUSCO                                         }     from '../bin/qc/busco/main'
 include { QUAST                                         }     from '../bin/qc/quast/main'
 include { MULTIQC                                       }     from '../bin/qc/multiqc/main'
@@ -112,7 +115,13 @@ coverage_ch = fly_ch.info_cov
 
     consensum_file_ch = medaka_consensum_ch.assemble_medaka
 
-    prokka_ch = PROKKA (medaka_consensum_ch.assemble_medaka)
+    wrap_ch = WRAP(medaka_consensum_ch.assemble_medaka)
+
+    prokka_ch = PROKKA (wrap_ch)
+
+    bakta_ch = BAKTA (wrap_ch)
+
+    AGT(prokka_ch.prokka_gff, bakta_ch.bakta_gff3, wrap_ch)
 
     busco_ch = BUSCO(medaka_consensum_ch.assemble_medaka)
     
