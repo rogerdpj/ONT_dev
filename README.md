@@ -8,12 +8,12 @@
 
 
 ## Introduction
-This repository hosts a pipeline buikd with Nextflow for whole-genome sequencing (WGS) analysis specifically otimised for **Oxford Nanopore Technology (ONT)** data of bacterial genomes. It is designed to offer an automated, reproducible, and scalable solution for processing large-scale genomic data in clinical microbiology research.
+This repository provides a Nextflow-based pipeline for whole-genome sequencing (WGS) analysis, optimised for **Oxford Nanopore Technology (ONT)** data, with supporting **Illumina** data for simple or hybrid assemblies. It is designed to offer an automated, reproducible, and scalable solution for processing large-scale genomic data in clinical microbiology research.
 
 ## Contents
 - [Pipeline summary](#pipeline-summary)
-    - [Assemble](#reference-genome)
-    - [Hybrid](#Hybrid)
+    - [Assemble](#mode---assemble)
+    - [Hybrid](#mode---hybrid)
 - [Installation](#installation)
 - [How to Use It](#how-to-use-it)
     - [Parameters](#parameters)
@@ -23,78 +23,91 @@ This repository hosts a pipeline buikd with Nextflow for whole-genome sequencing
 
 ## Pipeline summary
 
-The pipeline includes the following steps:
+All modes in the pipeline include the following steps:
 
-1. **Quality control**: Assessment of read quality before and after filtering using [Nanocomp](https://github.com/wdecoster/nanocomp). Filtering of low-quality bases and short reads was performed using [Filtlong](https://github.com/rrwick/Filtlong) followed by removal of adapter ONT adapter sequences using [Porechop](https://github.com/rrwick/Porechop).
+1. **Long reads QC and trimming**: Assessment of read quality before and after filtering using [Nanoplot](https://github.com/wdecoster/NanoPlot) and summarised with [Nanocomp](https://github.com/wdecoster/nanocomp). Filtering of low-quality bases and short reads is performed using [Filtlong](https://github.com/rrwick/Filtlong) followed by removal of adapter ONT adapter sequences using [Porechop](https://github.com/rrwick/Porechop).
 
-The mode --assemble is followed by:
+### mode --assemble
 
-2. **Assembly**: *De novo* assembly using the single-moleucle assembler [Flye](https://github.com/mikolmogorov/Flye) followed by a **polishing** step and the construction of a consensus sequence using [Medaka](https://github.com/nanoporetech/medaka). 
+2. **Assembly**: *De novo* assembly using the single-molecule assembler [Flye](https://github.com/mikolmogorov/Flye) followed by multiple rounds of **polishing** and the construction of a consensus sequence using [Medaka](https://github.com/nanoporetech/medaka). 
 
     * <ins>Polishing process</ins>: The optimal number of polishing rounds is determined automatically using the CART algorithm. The prediction is based on multiple parameters, which include error rate, N50/L50, genome coverage, Total Length of Matches, Average Occurrences, Distinct Minimizers, and processing time per round.
 
-<center>
-<table>
-    <thead>
-        <tr>
-            <th align= "center"> Source </th>
-            <th align= "center"> Parameter </th>
-            <th align= "center"> Description </th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td rowspan="4" align="center">Minimap2 </td>
-            <td align="center">DistinctMinimizers </td>
-            <td align="center">Number of unique minimizers found (Minimap2 value),change < 0.1% in distinct minimizers </td>
-        </tr>
-        <tr>
-            <td align="center">AverageOccurrences </td>
-            <td align="center">Average occurrences of minimizers (Minimap2),change < 0.01 in average occurrences </td>
-        </tr>
-        <tr>
-            <td align="center">TotalLengthMatches </td>
-            <td align="center">Total length of aligned matches,change < 0.1% </td>
-        </tr>
-        <tr>
-            <td align="center">ProcessingTime </td>
-            <td align="center">	Total execution time per round (Racon or Minimap2), change < 5%</td>
-        </tr>
-        <tr>
-            <td rowspan="1" align= "center"> RACON </td>
-            <td align= "center"> Processing Time </td>
-            <td align= "center"> Change < 5% </td>
-        </tr>
-        <tr>
-            <td rowspan="1" align= "center"> QUAST </td>
-            <td align= "center"> N50/L50 </td>
-            <td align= "center"> Minimum contig length that covers 50% of the assembly, change < 100 bp </td>
-        </tr>
-        <tr>
-            <td rowspan="1" align= "center"> QUAST/MEDAKA </td>
-            <td align="center"> ErrorRate </td>
-            <td align="center">	Error rate in the sequence after each polishing round </td>
-        </tr>
-        <tr>
-            <td rowspan="1" align= "center"> BUSCO </td>
-            <td align= "center"> Completeness (BUSCO) </td>
-            <td align ="center"> Change < 1% in complete genes </td>
-        </tr>
-        <tr>
-            <td rowspan=1 align= "center"> Target Value </td>
-            <td align= "center"> Optional Rounds </td>
-            <td align ="center"> Optimal number of rounds needed to achieve convergence </td>
-        </tr>
-    <t/body>
-</table>
-</center>
+        <center>
+        <table>
+            <thead>
+                <tr>
+                    <th align= "center"> Source </th>
+                    <th align= "center"> Parameter </th>
+                    <th align= "center"> Description </th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td rowspan="4" align="center">Minimap2 </td>
+                    <td align="center">DistinctMinimizers </td>
+                    <td align="center">Number of unique minimizers found (Minimap2 value),change < 0.1% in distinct minimizers </td>
+                </tr>
+                <tr>
+                    <td align="center">AverageOccurrences </td>
+                    <td align="center">Average occurrences of minimizers (Minimap2),change < 0.01 in average occurrences </td>
+                </tr>
+                <tr>
+                    <td align="center">TotalLengthMatches </td>
+                    <td align="center">Total length of aligned matches,change < 0.1% </td>
+                </tr>
+                <tr>
+                    <td align="center">ProcessingTime </td>
+                    <td align="center">	Total execution time per round (Racon or Minimap2), change < 5%</td>
+                </tr>
+                <tr>
+                    <td rowspan="1" align= "center"> RACON </td>
+                    <td align= "center"> Processing Time </td>
+                    <td align= "center"> Change < 5% </td>
+                </tr>
+                <tr>
+                    <td rowspan="1" align= "center"> QUAST </td>
+                    <td align= "center"> N50/L50 </td>
+                    <td align= "center"> Minimum contig length that covers 50% of the assembly, change < 100 bp </td>
+                </tr>
+                <tr>
+                    <td rowspan="1" align= "center"> QUAST/MEDAKA </td>
+                    <td align="center"> ErrorRate </td>
+                    <td align="center">	Error rate in the sequence after each polishing round </td>
+                </tr>
+                <tr>
+                    <td rowspan="1" align= "center"> BUSCO </td>
+                    <td align= "center"> Completeness (BUSCO) </td>
+                    <td align ="center"> Change < 1% in complete genes </td>
+                </tr>
+                <tr>
+                    <td rowspan=1 align= "center"> Target Value </td>
+                    <td align= "center"> Optional Rounds </td>
+                    <td align ="center"> Optimal number of rounds needed to achieve convergence </td>
+                </tr>
+            <t/body>
+        </table>
+        </center>
 
-3. **Genome QC**:  Structural quality metrics of the assembly will be evaluated using [QUAST](https://quast.sourceforge.net/) and its completeness with [BUSCO](https://busco.ezlab.org/). 
+### mode --hybrid
+
+2. **Assembly**: The [Autocycler](https://github.com/rrwick/Autocycler) tool is used to generate consensus *de novo* long-read assembly. The long-read assembly is then polished with the short Illumina reads following these steps:
+
+    * <ins>Short reads QC and trimming</ins>: Assessment of short read quality before and after trimming using [FastQC](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/) and summarised with [MultiQC](https://github.com/MultiQC/MultiQC). Filtering of low-quality bases and short reads is performed with [Fastp](https://github.com/OpenGene/fastp).
+
+    * <ins>Mapping and polishing</ins>: Short reads are mapped against the genome assembly using [bwa mem](https://github.com/lh3/bwa) followed by a filtering and polishing step to improve the genome assembly using [Polipolish](https://github.com/rrwick/Polypolish).
+
+Once the consensus genome assemblies are obtained they are all processed the same way:
+
+3. **Assembly and genome QC**:  Following genome assembly, structural quality metrics are evaluated with [QUAST](https://quast.sourceforge.net/), and genome completeness is assessed using [BUSCO](https://busco.ezlab.org/). A final report is generated with [MultiQC](https://github.com/MultiQC/MultiQC).
+
+4. **Annotation**: Genome annotation is carried out with both [Prokka](https://github.com/tseemann/prokka) and [Bakta](https://github.com/oschwengers/bakta). The resulting gff annotation files are fixed and combine with [AGAT](https://github.com/NBISweden/AGAT).
 
 4. **Post-assembly analyses**:
     *   Mass screening of contigs for antimicrobial resistance or virulence genes using [ABRIcate](https://github.com/tseemann/abricate).
     * Identification of antimicrobial resistance genes and point mutations in protein and/or assembled nucleotide sequences using [AMRFinder](https://github.com/ncbi/amr).
-    * Scan genome against traditional PubMLST schemes using [mlst](https://github.com/tseemann/mlst). 
+    * Scan genome against traditional PubMLST schemes using [MLST](https://github.com/tseemann/mlst). 
+
 
 # Installation
 The prerequisites to run the pipeline are:
@@ -121,7 +134,8 @@ cd ONT_BACTERIAL_ANALYSIS
 
 # How to use it?
 
-Inside the ONT_BACTERIAL_ANALYSIS directory, modify the file  **genome_size.csv** to include for each barcode included, its expected genome size (bp) and the sample code you want to assign:
+Inside the ONT_BACTERIAL_ANALYSIS directory, modify the file  **genome_size.csv** to add for each barcode its expected genome size (bp) and the sample code you want to assign:
+
 >[!IMPORTANT]
 The sample code names should not include "-"
 
@@ -141,33 +155,42 @@ Run the pipeline using the following command, adjusting the parameters as needed
 ```
 nextflow run main.nf --mode assemble --genome_size_file barcode_info.csv --input '/path/to/data/barcode*' -profile <docker/singularity/conda>
 ```
+
+*HYBRID*
+```
+nextflow run main.nf --mode hybrid --genome_size_file barcode_info.csv --input '/path/to/data/barcode*' --short_inputs '/path/to/data/*_{1,2}.fastq.gz' -profile <docker/singularity/conda>
+```
+
 ### Parameters
 
---mode: Depends on the analysis assemble / hybrid_amr / hybrid_vc.
-
---input: Path to input folders containing the raw .fastq files for each barcode after performing ONT absecalling.
-
---outdir: Directory where the results will be stored (default: ONT_BACTERIAL_ANALYSIS/data/out).
-
--profile: Specifies the execution profile (docker, singularity or conda).
-
---enome_size_file: .csv file containing the expected genome size and sample code per each of the barcodes.
-
-
-#### Optional parameters
-
--w: Path to the temporary work directory where files will be stored (default: ./work).
-
-##### Filter
---min_length: Minimum length threshold (bp). Default: 1000 
-
---min_mean_q: minimum mean quality threshold. Default: 10
-
---keep_percent: Throw out the worst (100-x)% of read bases. Default: 90 (throw the worst 10% of read bases) 
+```bash
+╭─ Required Options ──────────────────────────────────────────────────────────────────────────────────────────╮
+│--mode             TEXT    Selection of the pipeline assemble/hybrid [required]                              │   
+│--input            TEXT    Input barcode* folder(s) containing the long reads .fastq files [required]        │
+│-profile           TEXT    Selection of execution profile (docker, singularity or conda) [required]          │
+│--genome_size_file TEXT    Path to the .csv file with barcode, size and sample name information [required]   │  
+│-profile           TEXT    Selection of execution profile (docker, singularity or conda) [required]          │
+│                                                                                                             │
+│  Pipeline specific                                                                                          │
+│--short_inputs     TEXT    (--mode hybrid) Input FASTQ paired-end files (.fastq.gz format)  [required]       │
+╰─────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭─ Additional Options ────────────────────────────────────────────────────────────────────────────────────────╮
+│--outdir           PATH    Directory to write the output [default: out]                                      │
+│-w                 PATH    Path to the work dir. where temporary files will be written [default: ./work ]    │
+│--organism         TEXT    To be used by Abricate. Abricate uses specific databases for Escherichia coli     │
+│                           and Klebsiella pneumoniae [default: "" ]                                          │
+│--help                     Show this message and exit                                                        │      
+╰─────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭─ Long-read filtering Options ───────────────────────────────────────────────────────────────────────────────╮
+│--min_length       INTEGER     Minimum length threshold (bp) [default: 1000]                                 │
+│--min_mean_q       INTEGER     Minimum mean quality threshold [default: 10]                                  │
+│--keep_percent     INTEGER     Throw out the worst (100-x)% of read bases [default: 90]                      │
+╰─────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+```
 
 ## REFERENCE
 
-[Benchmarking reveals superiority of deep learning variant callers on bacterial nanopore sequence data](https://elifesciences.org/articles/98300)
+[Benchmarking reveals superiority of deep learning variant callers on bacterial Nanopore sequence data](https://elifesciences.org/articles/98300)
 [How low can you go? Short-read polishing of Oxford Nanopore bacterial genome assemblies](https://www.microbiologyresearch.org/content/journal/mgen/10.1099/mgen.0.001254)
 
 [Evaluation of the accuracy of bacterial genome reconstruction with Oxford Nanopore R10.4.1 long-read-only sequencing](https://www.microbiologyresearch.org/content/journal/mgen/10.1099/mgen.0.001246)
