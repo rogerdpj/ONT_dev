@@ -3,7 +3,13 @@ process AUTOCYCLER {
 
     container "$params.autocycler.docker"
 
-    publishDir "${params.outdir}/2-Assembly/1-Autocycler", mode: 'copy', overwrite: true, only: ["metrics.tsv"]
+    publishDir "${params.outdir}/2-Assembly/1-Autocycler", mode: 'copy', saveAs: { filename ->
+        if (filename.endsWith(".tsv")) {
+            return "${sample_code}/metrics.tsv"
+        } else {
+            return null
+        }
+    }
 
     input:
     tuple val(barcode_id), path(reads), val(genome_size_map), val (sample_code)

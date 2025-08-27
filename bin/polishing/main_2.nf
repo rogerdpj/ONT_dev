@@ -5,7 +5,7 @@ process ALIGN_SHORT_READS {
 
     input:
     tuple val(sample_code), path(final_consensus)
-    tuple val(sample_code), path(short_reads)
+    tuple val(shortread_code), path(short_reads)
 
     output:
     tuple val(sample_code), path("alignments_1.sam"), emit: aligned_sam1
