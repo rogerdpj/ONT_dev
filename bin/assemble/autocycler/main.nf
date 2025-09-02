@@ -3,6 +3,11 @@ process AUTOCYCLER {
 
     container "$params.autocycler.docker"
 
+    cpus 2
+    memory '4 GB'
+    time '24h'
+
+
     publishDir "${params.outdir}/2-Assembly/1-Autocycler", mode: 'copy', saveAs: { filename ->
         if (filename.endsWith(".tsv")) {
             return "${sample_code}/metrics.tsv"
