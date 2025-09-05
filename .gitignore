@@ -28,3 +28,4 @@ work/
 data/out/
 data/out/report/
 data/out/report/DVT_trace.txt
+data/out*
