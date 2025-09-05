@@ -34,15 +34,17 @@ process AUTOCYCLER {
     # Step 2: Generating input assemblies
     
     mkdir assemblies
-    for assembler in plassembler canu flye metamdbg miniasm necat nextdenovo raven; do
+    for assembler in plassembler canu flye miniasm necat nextdenovo raven; do
       for i in 01 02 03 04; do
-        autocycler helper \$assembler --reads subsampled_reads/sample_\${i}.fastq --out_prefix assemblies/\${assembler}_\${i} --threads ${task.cpus} --genome_size ${genome_size_map}
+        autocycler helper \$assembler --reads subsampled_reads/sample_\${i}.fastq --out_prefix assemblies/\${assembler}_\${i} --genome_size ${genome_size_map}
       done
     done
 
     # Step 3: Autocycler compress and cluster
-
+    RUST_BACKTRACE=1 \
+    RAYON_NUM_THREADS=2 \
     autocycler compress --assemblies_dir assemblies --autocycler_dir autocycler_out
+    
     autocycler cluster --autocycler_dir autocycler_out
 
     # Step 4: Autocycler trim and resolve

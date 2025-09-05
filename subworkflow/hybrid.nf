@@ -42,7 +42,7 @@ include { AMR                                         }     from '../bin/AMR/abr
 include { AMR_2                                       }     from '../bin/AMR/resfinder/main'
 include { PROKKA                                      }     from '../bin/annotation/prokka/main'
 include { BAKTA                                       }     from '../bin/annotation/bakta/main'
-include { AGT                                         }     from '../bin/annotation/main'
+include { AGT                                         }     from '../bin/annotation/main_2'
 
 /*
 
