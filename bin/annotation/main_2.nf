@@ -4,7 +4,7 @@ process AGT {
     publishDir "${params.outdir}/2-Assembly/3-Annotations/AGT_${sample_code}", mode: 'copy'
 
     container "$params.agat.docker"
-    
+
     input:
     path prokka_file
     path bakta_file
@@ -18,19 +18,15 @@ process AGT {
 
     script:
     """
+    echo "Limpiando headers del FASTA con IDs únicos..."
+    awk '/^>/{print ">contig_" ++i; next} {print}' ${assembly_file} > assembly_clean.fasta
 
-    # Limpiar FASTA: eliminar metadatos de headers
-
-    echo "Limpiando headers del FASTA si es necesario..."
-    awk '/^>/ {print ">contig_1"} !/^>/ {print}' ${assembly_file} > assembly_clean.fasta
-
-    # Validar tamaños iguales
     # Convertir GFF de Prokka a formato GFF3 válido
     agat_convert_sp_gxf2gxf.pl --gff ${prokka_file} --output prokka_${sample_code}.gff3
 
-    # Extraer los contig IDs reales desde el FASTA original
+    # Extraer contig IDs originales y nuevos
+    grep "^>" ${assembly_file} | sed 's/^>//; s/ .*//' > prokka_contigs.txt
     grep "^>" assembly_clean.fasta | sed 's/^>//' > bakta_contigs.txt
-    grep "^##sequence-region" prokka_${sample_code}.gff3 | cut -d ' ' -f2 > prokka_contigs.txt
 
     # Validar tamaños iguales
     wc -l prokka_contigs.txt
@@ -54,9 +50,9 @@ process AGT {
     # Filtrar genes incompletos
     agat_sp_filter_incomplete_gene_coding_models.pl --gff longest_${sample_code}.gff3 --fasta assembly_clean.fasta --output filtered_${sample_code}.gff3
 
-    # Validar consistencia IDs
+    # Validar consistencia de contig IDs
     grep "^>" assembly_clean.fasta | sed 's/^>//' | sort > ids_fasta.txt
-    awk '\$0 ~ /^#/ {next} \$0 ~ /^>/ {exit} {print \$1}' filtered_${sample_code}.gff3 | sort | uniq > ids_gff.txt
+    awk '\$0 !~ /^#/ {print \$1}' filtered_${sample_code}.gff3 | sort | uniq > ids_gff.txt
     comm -23 ids_gff.txt ids_fasta.txt > mismatched_ids.txt || true
 
     # Renombrar si hay incompatibilidades
@@ -73,6 +69,5 @@ process AGT {
 
     # Estadísticas de anotación
     agat_sp_statistics.pl --gff final_${sample_code}.gff3 --output statistics_report_${sample_code}.txt
-    
     """
 }

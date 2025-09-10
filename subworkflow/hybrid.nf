@@ -19,8 +19,10 @@ Configuration environemnt:
 
 //Call all the sub-work
 
+include { PREPARE_KRAKEN_DB                           }     from '../bin/kraken/db_set'
 include { QC                                          }     from '../bin/qc/main'
 include { TRIMMING                                    }     from '../bin/trimming/main'
+include { KRAKEN_ONT;SEQTK_PRUNE                      }     from '../bin/kraken/main'
 include { AUTOCYCLER                                  }     from '../bin/assemble/autocycler/main'
 include { DNAAPLER                                    }     from '../bin/assemble/autocycler/dnaapler'
     /*
@@ -72,8 +74,9 @@ include { AMR_2 as POST_ANALYSIS_AMRFINDER            }     from '../bin/AMR/AMR
 
 
 workflow hybrid {
-    preprocess_output = pre_process()
-    assambleprocess_output = assamble_process(preprocess_output.trimming_files_ch)
+    krakenprocess_output = workflow_kraken_process()
+    preprocess_output = pre_process(krakenprocess_output.DB_CH)
+    assambleprocess_output = assamble_process(preprocess_output.prune_reads_ch)
     post_analysis_output = post_analysis(assambleprocess_output.dnaapler_ch)
    /* 
     vcprocess_output = workflow_vc()
@@ -81,22 +84,53 @@ workflow hybrid {
     */
 }
 
+workflow workflow_kraken_process {
+    db_ready_ch = PREPARE_KRAKEN_DB()
+    DB_CH= db_ready_ch.db_ready
+
+    emit:
+    DB_CH
+}
+
 workflow pre_process {
     take:
+    DB_CH
+
     main:
     barcode_dir_ch = channel.fromPath(params.input, type: 'dir').map{barcode_dir -> tuple(barcode_dir.baseName, barcode_dir)}
     qc_ch = QC(barcode_dir_ch)
     trimming_ch = TRIMMING(qc_ch.fastq_combine)
     trimming_files_ch = trimming_ch.barcodefile_compress
 
+    //KRAKEN
+    READS_DB_CH = trimming_files_ch.combine(DB_CH)
+                .map { sample_id, reads_se, db_dir ->
+                tuple (sample_id, reads_se, db_dir)
+    }
+    READS_DB_CH.view()
+    
+    kraken_ch = KRAKEN_ONT (READS_DB_CH)
+
+    //PRUNNING
+    fastq_prunning_ch = trimming_files_ch.join(kraken_ch.keep_ids).map {
+        sample_id,reads_sn, keep_ids ->
+        tuple (sample_id, reads_sn, keep_ids)
+    }
+    
+    prune_ch = SEQTK_PRUNE(fastq_prunning_ch)
+    prune_reads_ch = prune_ch.pruned_reads
+    
+
     emit:
     trimming_files_ch
-
+    prune_reads_ch
+    
 }
 
 workflow assamble_process {
+    
     take:
-    trimming_files_ch
+    prune_reads_ch
     
     main:
     
@@ -106,7 +140,7 @@ workflow assamble_process {
                         .map { row -> tuple(row.barcode, row.genome_size as int, row.sample_code) }
 
 
-    reads_with_size_ch = trimming_files_ch.join(genome_size_ch)
+    reads_with_size_ch = prune_reads_ch.join(genome_size_ch)
     .map { barcode_id, barcode_file, genome_size, sample_code ->
         tuple(barcode_id, barcode_file, genome_size, sample_code)
     }
