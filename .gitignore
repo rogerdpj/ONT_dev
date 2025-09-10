@@ -29,3 +29,6 @@ data/out/
 data/out/report/
 data/out/report/DVT_trace.txt
 data/out*
+.nfs*
+DVT_trace.txt
+.vscode/

@@ -107,7 +107,6 @@ workflow pre_process {
                 .map { sample_id, reads_se, db_dir ->
                 tuple (sample_id, reads_se, db_dir)
     }
-    READS_DB_CH.view()
     
     kraken_ch = KRAKEN_ONT (READS_DB_CH)
 
