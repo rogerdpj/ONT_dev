@@ -15,9 +15,10 @@ Configuration environemnt:
     .stripIndent()
 
 //Call all the sub-work
-
+include { PREPARE_KRAKEN_DB                             }     from '../bin/kraken/db_set'
 include { QC                                            }     from '../bin/qc/main'
 include { TRIMMING                                      }     from '../bin/trimming/main'
+include { KRAKEN_ONT;SEQTK_PRUNE                        }     from '../bin/kraken/main'
 include { NANOCOMP                                      }     from '../bin/qc/nanocomp/main'
 include { SUB_SAMPLE_2 as ASSEMBLE                      }     from '../bin/assemble/fly/main'
 include { POLISHING_ROUND                               }     from '../bin/polishing/main'
@@ -25,7 +26,7 @@ include { MEDAKA                                        }     from '../bin/assem
 include { WRAP                                          }     from '../bin/polishing/wrap_2'
 include { PROKKA                                        }     from '../bin/annotation/prokka/main'
 include { BAKTA                                         }     from '../bin/annotation/bakta/main_2'
-include { AGT                                           }     from '../bin/annotation/main_2'
+include { AGT                                           }     from '../bin/annotation/main'
 include { BUSCO                                         }     from '../bin/qc/busco/main'
 include { QUAST                                         }     from '../bin/qc/quast/main'
 include { MULTIQC                                       }     from '../bin/qc/multiqc/main'
@@ -34,13 +35,24 @@ include { AMR_2                                         }     from '../bin/AMR/r
 include { MLST                                          }     from '../bin/mlst/main'
 
 workflow assemble {
-    preprocess_output = pre_process()
-    assambleprocess_output = assamble_process(preprocess_output.trimming_ch, preprocess_output.trimming_ch_2, preprocess_output.pre_data_qc)
+    krakenprocess_output = workflow_kraken_process()
+    preprocess_output = pre_process(krakenprocess_output.DB_CH)
+    assambleprocess_output = assamble_process(preprocess_output.pre_data_qc, preprocess_output.prune_reads_ch)
     amrprocess_output = amr_process (assambleprocess_output.consensum_file_ch)
+}
+
+workflow workflow_kraken_process {
+    db_ready_ch = PREPARE_KRAKEN_DB()
+    DB_CH= db_ready_ch.db_ready
+
+    emit:
+    DB_CH
 }
 
 workflow pre_process {
     take:
+    DB_CH
+
     main:
     barcode_dir_ch = channel.fromPath(params.input, type: 'dir').map{barcode_dir -> tuple(barcode_dir.baseName, barcode_dir)}
     qc_ch = QC(barcode_dir_ch)
@@ -49,29 +61,48 @@ workflow pre_process {
     trimming_ch_2 = trimming_before_ch.barcodefile_compress
     pre_data_qc = qc_ch.fastq_combine
 
+    //KRAKEN
+    READS_DB_CH = trimming_ch_2.combine(DB_CH)
+                .map { sample_id, reads_se, db_dir ->
+                tuple (sample_id, reads_se, db_dir)
+    }
+    
+    kraken_ch = KRAKEN_ONT (READS_DB_CH)
+
+    //PRUNNING
+    fastq_prunning_ch = trimming_ch_2.join(kraken_ch.keep_ids).map {
+        sample_id,reads_sn, keep_ids ->
+        tuple (sample_id, reads_sn, keep_ids)
+    }
+    
+    prune_ch = SEQTK_PRUNE(fastq_prunning_ch)
+    prune_reads_ch = prune_ch.pruned_reads
+    
+
     emit:
-    trimming_ch
-    trimming_ch_2
+    prune_reads_ch
     pre_data_qc
 
 }
 
 workflow assamble_process {
     take:
-    trimming_ch
-    trimming_ch_2
+    prune_reads_ch
     pre_data_qc
     
     main:
 
-    nocomp_ch = NANOCOMP(pre_data_qc.map{i -> i[1]}.collect(), trimming_ch_2.map{i -> i[1]}.collect())
+    nocomp_ch = NANOCOMP(pre_data_qc.map{i -> i[1]}.collect(), prune_reads_ch.map{i -> i[1]}.collect())
 
     genome_size_ch = Channel
                         .fromPath(params.genome_size_file)
                         .splitCsv(header: true)
                         .map { row -> tuple(row.barcode, row.genome_size as int, row.sample_code) }
 
-    reads_with_size_ch = trimming_ch.join(genome_size_ch)
+    reads_with_size_ch = prune_reads_ch.join(genome_size_ch)
+        .map { barcode_id, barcode_file, genome_size, sample_code ->
+            tuple(barcode_id, barcode_file, genome_size, sample_code)
+        }
 
     fly_ch = ASSEMBLE(reads_with_size_ch)
 
@@ -106,10 +137,10 @@ coverage_ch = fly_ch.info_cov
     polished_ch_final = POLISHING_ROUND(polished_ch)
 
     medaka_ch = sample_fixe
-    .join(polished_ch_final)
-    .map { sample_code, trimmed_reads, final_polishing_fasta ->
-        tuple(sample_code, trimmed_reads, final_polishing_fasta)
-    }
+        .join(polished_ch_final)
+        .map { sample_code, trimmed_reads, final_polishing_fasta ->
+            tuple(sample_code, trimmed_reads, final_polishing_fasta)
+        }
    
     medaka_consensum_ch= MEDAKA(medaka_ch)
 
