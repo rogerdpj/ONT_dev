@@ -1,13 +1,14 @@
 process KRAKEN_ONT {
   
   tag "$sample_id"
-  container "${params.kraken.docker ?: 'jimmlucas/kraken2_new:1.0'}"
+  container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+      "docker://${params.kraken.docker}" :
+      params.kraken.docker }"
   
   cpus   { params.kraken_cpus ?: 4 }
   memory { params.kraken_mem  ?: '16 GB' }
   time '24h'
   stageInMode 'symlink'
-  containerOptions "--entrypoint '' -u \$(id -u):\$(id -g)"
 
   input:
   tuple val(sample_id), path(reads_sn), path (db_dir)
@@ -53,7 +54,9 @@ process KRAKEN_ONT {
 process SEQTK_PRUNE {
 
   tag "$sample_id"
-  container "${params.quast.docker ?: 'jimmlucas/kraken2_new:1.0'}"
+  container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+      "docker://${params.quast.docker}" :
+      params.quast.docker }"
 
   input:
     tuple val(sample_id), path(reads_sn), path(keep_ids)
