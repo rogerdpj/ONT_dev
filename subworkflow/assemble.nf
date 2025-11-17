@@ -37,7 +37,7 @@ include { MLST                                          }     from '../bin/mlst/
 workflow assemble {
     krakenprocess_output = workflow_kraken_process()
     preprocess_output = pre_process(krakenprocess_output.DB_CH)
-    assambleprocess_output = assamble_process(preprocess_output.pre_data_qc, preprocess_output.prune_reads_ch)
+    assambleprocess_output = assamble_process(preprocess_output.prune_reads_ch)
     amrprocess_output = amr_process (assambleprocess_output.consensum_file_ch)
 }
 
@@ -78,21 +78,19 @@ workflow pre_process {
     prune_ch = SEQTK_PRUNE(fastq_prunning_ch)
     prune_reads_ch = prune_ch.pruned_reads
     
+    nocomp_ch = NANOCOMP(pre_data_qc.map{i -> i[1]}.collect(), prune_reads_ch.map{i -> i[1]}.collect())
 
     emit:
     prune_reads_ch
-    pre_data_qc
-
+    
 }
 
 workflow assamble_process {
     take:
     prune_reads_ch
-    pre_data_qc
-    
+        
     main:
 
-    nocomp_ch = NANOCOMP(pre_data_qc.map{i -> i[1]}.collect(), prune_reads_ch.map{i -> i[1]}.collect())
 
     genome_size_ch = Channel
                         .fromPath(params.genome_size_file)
