@@ -1,5 +1,9 @@
 process TRIMMING {
     tag "prunning process"
+
+    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+        "docker://${params.long_read.docker}" :
+        params.long_read.docker }"
     
     input:
     tuple val(barcode_id), path(fastq_file)
