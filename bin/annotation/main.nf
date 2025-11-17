@@ -1,7 +1,9 @@
 process AGT {
     tag "MERGE ANNOTATIONS"
 
-    container "$params.agat.docker"
+    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+        "docker://${params.agat.docker}" :
+        params.agat.docker }"
 
     publishDir "${params.outdir}/2-Assembly/3-Annotations", mode: 'copy'
     

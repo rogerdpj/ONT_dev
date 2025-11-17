@@ -1,6 +1,9 @@
 process BAKTA {
     tag "BAKTA ANNOTATIONS"
-    container params.bakta.docker
+    
+    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+        "docker://${params.bakta.docker}" :
+        params.bakta.docker }"
 
     publishDir "${params.outdir}/2-Assembly/3-Annotations", mode: 'copy', saveAs: { filename ->
         if (filename.endsWith(".gff3")) {

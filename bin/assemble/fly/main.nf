@@ -1,9 +1,12 @@
 process SUB_SAMPLE_2 {
     tag "ASSAMBLE FLY LONG READS ${sample_code}"
     
+    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+        "docker://${params.long_read.docker}" :
+        params.long_read.docker }"
+        
     publishDir "${params.outdir}/2-Assembly/1-Fly_structural", mode: 'copy'
 
-    
     input:
 
     tuple val(barcode_id), path(barcode_file), val (genome_size), val (sample_code)

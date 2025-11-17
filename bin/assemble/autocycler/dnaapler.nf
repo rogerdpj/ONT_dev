@@ -1,7 +1,9 @@
 process DNAAPLER {
     tag "dnaapler ${sample_code}"
 
-    container "$params.autocycler.docker"
+    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+        "docker://${params.autocycler.docker}" :
+        params.autocycler.docker }"
 
     publishDir "${params.outdir}/2-Assembly/2-Dnaapler", mode: 'copy'
 

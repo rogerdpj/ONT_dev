@@ -3,7 +3,9 @@ process WRAP {
 
     publishDir "${params.outdir}/2-Assembly", mode: 'copy'
 
-    container "$params.autocycler.docker"
+    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+        "docker://${params.autocycler.docker}" :
+        params.autocycler.docker }"
 
     input:
     tuple val(sample_code), path(polished_fasta)  // direct from POLISH output

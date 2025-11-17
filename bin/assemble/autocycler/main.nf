@@ -1,7 +1,9 @@
 process AUTOCYCLER {
     tag "autocycler ${sample_code}"
 
-    container "$params.autocycler.docker"
+    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+        "docker://${params.autocycler.docker}" :
+        params.autocycler.docker }"
 
     publishDir "${params.outdir}/2-Assembly/1-Autocycler", mode: 'copy', saveAs: { filename ->
         if (filename.endsWith(".tsv")) {

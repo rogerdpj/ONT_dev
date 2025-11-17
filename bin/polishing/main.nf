@@ -1,6 +1,10 @@
 process POLISHING_ROUND {
     tag "Polishing ${sample_code} for ${max_rounds} rounds"
 
+    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+        "docker://${params.long_read.docker}" :
+        params.long_read.docker }"
+    
     input:
     tuple val(sample_code), path(trimmed_reads), path(assembly_fasta), val(max_rounds)
 

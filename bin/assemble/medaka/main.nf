@@ -1,7 +1,9 @@
 process MEDAKA {
     tag "Medaka Consensus for ${sample_code}"
 
-    container "$params.medaka.docker"
+    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+        "docker://${params.medaka.docker}" :
+        params.medaka.docker }"
 
     publishDir "${params.outdir}/2-Assembly", mode: 'copy', saveAs: { filename ->
         if (filename.endsWith(".fasta")) {

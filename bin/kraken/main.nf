@@ -55,8 +55,8 @@ process SEQTK_PRUNE {
 
   tag "$sample_id"
   container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-      "docker://${params.quast.docker}" :
-      params.quast.docker }"
+      "docker://${params.short_wgs.docker}" :
+      params.short_wgs.docker }"
 
   input:
     tuple val(sample_id), path(reads_sn), path(keep_ids)

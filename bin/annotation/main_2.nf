@@ -1,10 +1,11 @@
 process AGT {
     tag "MERGE ANNOTATIONS"
 
+    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+        "docker://${params.agat.docker}" :
+        params.agat.docker }"
+
     publishDir "${params.outdir}/2-Assembly/3-Annotations/AGT_${sample_code}", mode: 'copy'
-
-    container "$params.agat.docker"
-
     input:
     path prokka_file
     path bakta_file

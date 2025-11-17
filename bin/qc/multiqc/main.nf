@@ -1,9 +1,10 @@
 process MULTIQC {
 
     tag "Generating MultiQC report"
-    
-    container "$params.quast.docker"
-    
+    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+        "docker://${params.short_wgs.docker}" :
+        params.short_wgs.docker }"
+ 
     publishDir "${params.outdir}/1-QC/genomeQC", mode: 'copy'
 
     input:
