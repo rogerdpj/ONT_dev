@@ -1,6 +1,9 @@
 process NANOCOMP {
     tag "Nanocomp process"
-
+    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+        "docker://${params.long_read.docker}" :
+        params.long_read.docker }"
+    
     publishDir "${params.outdir}/1-QC/data_QC", mode: 'copy'
 
     input:
