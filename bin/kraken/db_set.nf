@@ -18,7 +18,7 @@ process PREPARE_KRAKEN_DB {
 
   """
 
-  DB_DIR="\${DB_DIR:-\${PWD}/kraken_db}"
+  export DB_DIR="\$PWD/kraken_db"
   mkdir -p "\$DB_DIR"
 
   export DB_SELECT='${params.db_select}'
