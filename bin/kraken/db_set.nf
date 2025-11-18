@@ -1,5 +1,4 @@
 process PREPARE_KRAKEN_DB {
-  
   tag "${params.db_select ?: 'db_16GB'}"
   label 'kraken_db_setup'
 

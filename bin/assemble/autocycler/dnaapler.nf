@@ -1,5 +1,7 @@
 process DNAAPLER {
     tag "dnaapler ${sample_code}"
+    label 'dna_apler'
+
 
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
         "docker://${params.autocycler.docker}" :

@@ -1,6 +1,7 @@
 process QUAST {
     tag "QC_ASSEMBLE"
-    
+    label 'env_quast'
+
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
         "docker://${params.short_wgs.docker}" :
         params.short_wgs.docker }"

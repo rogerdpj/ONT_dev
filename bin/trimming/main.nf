@@ -1,5 +1,6 @@
 process TRIMMING {
     tag "prunning process"
+    label 'env_trimming_read'
 
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
         "docker://${params.long_read.docker}" :

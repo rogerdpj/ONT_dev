@@ -1,6 +1,6 @@
 process MULTIQC_FASTQ {
-
     tag "Generating MultiQC report"
+    label 'env_multiqc_fastq'
 
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
         "docker://${params.short_wgs.docker}" :

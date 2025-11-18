@@ -30,34 +30,16 @@ process AMR {
     // Get databases for this organism or use default
     def dbs = db_map.get(organism_lc, db_map["default"])
     def dbs_str = dbs.collect { "\"${it}\"" }.join(" ")
-    def usingContainer = (workflow.containerEngine != null)
-
-    def dbEnvBlock
-    if (usingContainer) {
-        dbEnvBlock = params.abricate_db ?
-            "export ABRICATE_DB='${params.abricate_db}'" :
-            ""
-    } else {
-        dbEnvBlock = params.abricate_db ?
-            "export ABRICATE_DB='${params.abricate_db}'" :
-            "echo '[AMR] INFO: ABRICATE_DB is not defined. " +
-            "If you are using -profile conda, pass --abricate_db /path/to/db " +
-            "to specify where the Abricate databases are located.' >&2"
-}
 
     """
-    set -euo pipefail
-
-    ${dbEnvBlock}
-
     DBS=(${dbs_str})
 
-    echo -e "FILE\\tSEQUENCE\\tSTART\\tEND\\tSTRAND\\tGENE\\tCOVERAGE\\tCOVERAGE_MAP\\tGAPS\\t%COVERAGE\\t%IDENTITY\\tDATABASE\\tACCESSION\\tPRODUCT\\tRESISTANCE" > ${sample_code}_combined_abricate_report.tsv
+    echo -e "FILE\tSEQUENCE\tSTART\tEND\tSTRAND\tGENE\tCOVERAGE\tCOVERAGE_MAP\tGAPS\t%COVERAGE\t%IDENTITY\tDATABASE\tACCESSION\tPRODUCT\tRESISTANCE" > ${sample_code}_combined_abricate_report.tsv
 
     for db in \${DBS[@]}; do
-        echo "[AMR] Running ABRICATE with database: \$db"
+        echo "Running ABRICATE with database: \$db"
         abricate --db \$db ${assembly_file} --noheader >> ${sample_code}_combined_abricate_report.tsv
     done
-
+    
     """
 }

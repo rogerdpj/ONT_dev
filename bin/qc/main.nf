@@ -1,6 +1,7 @@
 process QC {
     tag "Quality control RAW data"
-
+    label 'env_nanoplot'
+    
     cache 'deep'
     
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?

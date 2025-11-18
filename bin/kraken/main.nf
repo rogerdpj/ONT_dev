@@ -1,6 +1,7 @@
 process KRAKEN_ONT {
-  
   tag "$sample_id"
+  label 'kraken_run'
+
   container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
       "docker://${params.kraken.docker}" :
       params.kraken.docker }"
@@ -52,8 +53,9 @@ process KRAKEN_ONT {
 
 
 process SEQTK_PRUNE {
-
   tag "$sample_id"
+  label 'seqtk_prune'
+  
   container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
       "docker://${params.short_wgs.docker}" :
       params.short_wgs.docker }"

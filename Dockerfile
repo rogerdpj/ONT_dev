@@ -2,7 +2,7 @@ FROM continuumio/miniconda3
 LABEL authors="JIMM LUCAS" \
       description="Docker image containing ENVIROMENt with all the tools for WGS ONT"
 
-COPY nanoporeWGS.yml /tmp/nanoporeWGS.yml
+COPY envs/nanoporeWGS.yml /tmp/nanoporeWGS.yml
 
 WORKDIR /tmp
 

@@ -1,6 +1,7 @@
 process SUB_SAMPLE_2 {
     tag "ASSAMBLE FLY LONG READS ${sample_code}"
-    
+    label 'fly_long_reads'
+
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
         "docker://${params.long_read.docker}" :
         params.long_read.docker }"

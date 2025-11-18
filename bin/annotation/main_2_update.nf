@@ -1,5 +1,6 @@
 process AGT {
     tag "MERGE ANNOTATIONS (${sample_code})"
+    label 'agat_enhanced'
 
     
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?

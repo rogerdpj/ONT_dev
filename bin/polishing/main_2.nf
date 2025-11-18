@@ -1,5 +1,6 @@
 process ALIGN_SHORT_READS {
     tag "Aligning short reads for ${sample_code}"
+    label 'aligning_short_reads'
 
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
         "docker://${params.short_wgs.docker}" :

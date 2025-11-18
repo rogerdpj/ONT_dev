@@ -2,7 +2,7 @@ FROM continuumio/miniconda3
 LABEL authors="JIMM LUCAS" \
       description="Docker image containing ENV BUSCO"
 
-COPY busco.yml /tmp/busco.yml
+COPY envs/busco.yml /tmp/busco.yml
 
 WORKDIR /tmp
 

@@ -1,6 +1,7 @@
 process MEDAKA {
     tag "Medaka Consensus for ${sample_code}"
-
+    label 'env_medaka'
+    
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
         "docker://${params.medaka.docker}" :
         params.medaka.docker }"

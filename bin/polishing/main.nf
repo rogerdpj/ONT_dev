@@ -1,5 +1,6 @@
 process POLISHING_ROUND {
     tag "Polishing ${sample_code} for ${max_rounds} rounds"
+    label 'env_polishing_round'
 
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
         "docker://${params.long_read.docker}" :

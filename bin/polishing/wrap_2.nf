@@ -1,12 +1,13 @@
 process WRAP {
     tag "Wrapping polished consensus for ${sample_code}"
-
-    publishDir "${params.outdir}/2-Assembly", mode: 'copy'
+    label 'env_wrap'
 
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
         "docker://${params.autocycler.docker}" :
         params.autocycler.docker }"
 
+
+    publishDir "${params.outdir}/2-Assembly", mode: 'copy'
     input:
     tuple val(sample_code), path(medaka_fasta) 
 

@@ -1,5 +1,6 @@
 process WRAP {
     tag "Wrapping polished consensus for ${sample_code}"
+    label 'env_wrap'
 
     publishDir "${params.outdir}/2-Assembly", mode: 'copy'
 
