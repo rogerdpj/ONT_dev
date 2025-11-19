@@ -1,19 +1,21 @@
 task_id	hash	native_id	name	status	exit	submit	duration	realtime	%cpu	peak_rss	peak_vmem	rchar	wchar
-2	4c/de8a47	3697061	assemble:pre_process:QC (Quality control RAW data)	CACHED	0	2025-11-19 11:59:58.520	27.6s	27.3s	58.8%	2.3 GB	82.3 GB	135.6 MB	50.8 MB
+2	0d/5e5cf5	3318625	assemble:workflow_kraken_process:BAKTA_SET_DB (bakta_DB_light)	CACHED	0	2025-11-19 17:01:57.018	5m 19s	5m 19s	23.8%	107.9 MB	1.2 GB	4 GB	5.4 GB
 1	1c/9b44bc	3442023	assemble:workflow_kraken_process:PREPARE_KRAKEN_DB (db_16GB)	CACHED	0	2025-11-19 11:56:08.607	10m 13s	10m 12s	32.3%	23.8 MB	40.2 MB	52.8 GB	42.1 GB
-3	0c/89dddd	3734038	assemble:pre_process:TRIMMING (prunning process)	CACHED	0	2025-11-19 12:00:26.194	41.6s	41.3s	620.4%	242.9 MB	1.6 GB	340.3 MB	191.4 MB
-4	d5/4115ae	490012	assemble:pre_process:KRAKEN_ONT (barcode22)	CACHED	0	2025-11-19 12:14:52.191	2s	1.6s	230.8%	14.9 GB	15.3 GB	82.8 MB	7 MB
-5	9f/89cc93	494323	assemble:pre_process:SEQTK_PRUNE (barcode22)	CACHED	0	2025-11-19 12:14:57.815	11.4s	11.1s	106.9%	5 MB	11.5 MB	115.3 MB	115.1 MB
-6	e5/a44eb2	503790	assemble:pre_process:NANOCOMP (Nanocomp process)	CACHED	0	2025-11-19 12:15:09.244	15.7s	15.3s	280.6%	1.5 GB	63.4 GB	145.2 MB	4.8 MB
+3	4c/de8a47	3697061	assemble:pre_process:QC (Quality control RAW data)	CACHED	0	2025-11-19 11:59:58.520	27.6s	27.3s	58.8%	2.3 GB	82.3 GB	135.6 MB	50.8 MB
+4	0c/89dddd	3734038	assemble:pre_process:TRIMMING (prunning process)	CACHED	0	2025-11-19 12:00:26.194	41.6s	41.3s	620.4%	242.9 MB	1.6 GB	340.3 MB	191.4 MB
+5	d5/4115ae	490012	assemble:pre_process:KRAKEN_ONT (barcode22)	CACHED	0	2025-11-19 12:14:52.191	2s	1.6s	230.8%	14.9 GB	15.3 GB	82.8 MB	7 MB
+6	9f/89cc93	494323	assemble:pre_process:SEQTK_PRUNE (barcode22)	CACHED	0	2025-11-19 12:14:57.815	11.4s	11.1s	106.9%	5 MB	11.5 MB	115.3 MB	115.1 MB
+8	e5/a44eb2	503790	assemble:pre_process:NANOCOMP (Nanocomp process)	CACHED	0	2025-11-19 12:15:09.244	15.7s	15.3s	280.6%	1.5 GB	63.4 GB	145.2 MB	4.8 MB
 7	a8/be7cd9	503796	assemble:assamble_process:ASSEMBLE (ASSAMBLE FLY LONG READS TEST)	CACHED	0	2025-11-19 12:15:09.250	2m 57s	2m 56s	263.8%	8.3 GB	33.7 GB	1.1 GB	499.6 MB
-8	a8/be5340	683125	assemble:assamble_process:POLISHING_ROUND (Polishing TEST for 8 rounds)	CACHED	0	2025-11-19 12:18:05.985	1m 4s	1m 3s	597.1%	195.3 MB	985.8 MB	1.3 GB	688.6 MB
-9	9a/7efa91	767086	assemble:assamble_process:MEDAKA (Medaka Consensus for TEST)	CACHED	0	2025-11-19 12:19:51.189	1m 8s	1m 8s	270.3%	6.7 GB	10.3 GB	586.6 MB	316.2 MB
+9	a8/be5340	683125	assemble:assamble_process:POLISHING_ROUND (Polishing TEST for 8 rounds)	CACHED	0	2025-11-19 12:18:05.985	1m 4s	1m 3s	597.1%	195.3 MB	985.8 MB	1.3 GB	688.6 MB
+10	9a/7efa91	767086	assemble:assamble_process:MEDAKA (Medaka Consensus for TEST)	CACHED	0	2025-11-19 12:19:51.189	1m 8s	1m 8s	270.3%	6.7 GB	10.3 GB	586.6 MB	316.2 MB
+14	f3/6e42ab	845310	assemble:amr_process:AMR_2 (AMRFinder PROCESS)	CACHED	0	2025-11-19 12:21:36.980	55.3s	55s	314.0%	248.2 MB	559.6 MB	41.9 MB	17 MB
 12	ea/bf1a14	819129	assemble:assamble_process:QUAST (QC_ASSEMBLE)	CACHED	0	2025-11-19 12:20:59.656	2.9s	2.6s	572.6%	92.8 MB	17.3 GB	67.8 MB	8 MB
-14	b5/b0c4b3	950382	assemble:assamble_process:WRAP (Wrapping polished consensus for TEST)	CACHED	0	2025-11-19 12:24:00.182	285ms	13ms	99.5%	0	0	4 MB	4 MB
-13	72/86b8c2	955291	assemble:assamble_process:BUSCO (GENOME COMPLETENESS)	CACHED	0	2025-11-19 12:24:08.106	1m 19s	1m 19s	98.6%	273.7 MB	34.5 GB	620.7 MB	253.7 MB
-10	f3/6e42ab	845310	assemble:amr_process:AMR_2 (AMRFinder PROCESS)	CACHED	0	2025-11-19 12:21:36.980	55.3s	55s	314.0%	248.2 MB	559.6 MB	41.9 MB	17 MB
-11	bd/d31ca7	819144	assemble:amr_process:MLST (MLST-annotation process TEST)	CACHED	0	2025-11-19 12:20:59.664	2s	1.7s	125.4%	175 MB	3.3 GB	10.4 MB	4.9 MB
-18	37/82844f	1005791	assemble:assamble_process:MULTIQC (Generating MultiQC report)	CACHED	0	2025-11-19 12:25:27.328	2.9s	2.6s	471.7%	101.9 MB	17.2 GB	43.1 MB	17.3 MB
-15	49/38cdc7	838805	assemble:amr_process:AMR (ABRICATE PROCESS)	CACHED	0	2025-11-19 12:21:28.603	1m 3s	1m 3s	81.1%	109.3 MB	235.2 MB	35.5 MB	15.7 MB
+16	b5/b0c4b3	950382	assemble:assamble_process:WRAP (Wrapping polished consensus for TEST)	CACHED	0	2025-11-19 12:24:00.182	285ms	13ms	99.5%	0	0	4 MB	4 MB
+11	72/86b8c2	955291	assemble:assamble_process:BUSCO (GENOME COMPLETENESS)	CACHED	0	2025-11-19 12:24:08.106	1m 19s	1m 19s	98.6%	273.7 MB	34.5 GB	620.7 MB	253.7 MB
+13	bd/d31ca7	819144	assemble:amr_process:MLST (MLST-annotation process TEST)	CACHED	0	2025-11-19 12:20:59.664	2s	1.7s	125.4%	175 MB	3.3 GB	10.4 MB	4.9 MB
+19	37/82844f	1005791	assemble:assamble_process:MULTIQC (Generating MultiQC report)	CACHED	0	2025-11-19 12:25:27.328	2.9s	2.6s	471.7%	101.9 MB	17.2 GB	43.1 MB	17.3 MB
+18	31/85fd16	3600607	assemble:assamble_process:BAKTA (BAKTA ANNOTATIONS TEST)	CACHED	0	2025-11-19 17:07:15.839	1m 24s	1m 24s	774.7%	11.2 GB	451.7 GB	4.6 GB	258.3 MB
 17	dc/2c3e8a	986404	assemble:assamble_process:PROKKA (PROKKA ANNOTATION)	CACHED	0	2025-11-19 12:25:00.545	1m 53s	1m 53s	549.2%	991.8 MB	2.1 GB	161.8 GB	128 MB
-16	09/f858dc	3536626	assemble:assamble_process:BAKTA (BAKTA ANNOTATIONS)	COMPLETED	0	2025-11-19 15:36:24.217	1m 37s	1m 36s	690.6%	3 GB	34.5 GB	4.6 GB	256.7 MB
+15	49/38cdc7	838805	assemble:amr_process:AMR (ABRICATE PROCESS)	CACHED	0	2025-11-19 12:21:28.603	1m 3s	1m 3s	81.1%	109.3 MB	235.2 MB	35.5 MB	15.7 MB
+20	5c/26a557	3658286	assemble:assamble_process:AGT (MERGE ANNOTATIONS)	CACHED	0	2025-11-19 17:08:40.097	36.6s	36.3s	94.4%	288.7 MB	295.7 MB	194.5 MB	54.5 MB

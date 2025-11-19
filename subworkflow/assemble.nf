@@ -25,7 +25,7 @@ include { POLISHING_ROUND                               }     from '../bin/polis
 include { MEDAKA                                        }     from '../bin/assemble/medaka/main'
 include { WRAP                                          }     from '../bin/polishing/wrap_2'
 include { PROKKA                                        }     from '../bin/annotation/prokka/main'
-include { BAKTA                                         }     from '../bin/annotation/bakta/main_2'
+include { BAKTA                                         }     from '../bin/annotation/bakta/main_3'
 include { AGT                                           }     from '../bin/annotation/main'
 include { BUSCO                                         }     from '../bin/qc/busco/main'
 include { QUAST                                         }     from '../bin/qc/quast/main'
@@ -33,20 +33,24 @@ include { MULTIQC                                       }     from '../bin/qc/mu
 include { AMR                                           }     from '../bin/AMR/abricate/main'
 include { AMR_2                                         }     from '../bin/AMR/resfinder/main'
 include { MLST                                          }     from '../bin/mlst/main'
+include { BAKTA_SET_DB                                  }     from '../bin/annotation/bakta/db_set'
 
 workflow assemble {
     krakenprocess_output = workflow_kraken_process()
     preprocess_output = pre_process(krakenprocess_output.DB_CH)
-    assambleprocess_output = assamble_process(preprocess_output.prune_reads_ch)
+    assambleprocess_output = assamble_process(preprocess_output.prune_reads_ch, krakenprocess_output.DB_BAKTA_CH)
     amrprocess_output = amr_process (assambleprocess_output.consensum_file_ch)
 }
 
 workflow workflow_kraken_process {
     db_ready_ch = PREPARE_KRAKEN_DB()
     DB_CH= db_ready_ch.db_ready
+    db_bakta_ready_ch = BAKTA_SET_DB()
+    DB_BAKTA_CH = db_bakta_ready_ch.db_bakta_dir
 
     emit:
     DB_CH
+    DB_BAKTA_CH
 }
 
 workflow pre_process {
@@ -88,6 +92,7 @@ workflow pre_process {
 workflow assamble_process {
     take:
     prune_reads_ch
+    DB_BAKTA_CH
         
     main:
 
@@ -148,7 +153,7 @@ coverage_ch = fly_ch.info_cov
 
     prokka_ch = PROKKA (wrap_ch)
 
-    bakta_ch = BAKTA (wrap_ch)
+    bakta_ch = BAKTA (wrap_ch, DB_BAKTA_CH)
 
     agt_ch = prokka_ch.prokka_gff
             .join(bakta_ch.bakta_gff3)
