@@ -131,6 +131,26 @@ cd ONT_BACTERIAL_ANALYSIS
   conda create -n Nanopore -f nanoporeWGS.yml busco.yml
   conda activate Nanopore
   ```
+### Local (Singularity)
+Remember to define the path for tmp files:
+
+SINGULARITY_TMPDIR=/PATH/singularity/tmp
+SINGULARITY_CACHEDIR=/PATH/singularity/cache
+TMPDIR=/PATH/singularity/tmp
+
+e.g:
+```
+SINGULARITY_TMPDIR=/mnt/dades/singularity/tmp \
+SINGULARITY_CACHEDIR=/mnt/dades/singularity/tmp \
+TMPDIR=/mnt/dades/singularity/tmp \
+nextflow run main.nf --mode assemble --genome_size_file barcode_info.csv \
+  --input '/PATH/TO/RUN/barcode*' \
+  -w /PATH/WOR/DIRECTORY \
+  -profile singularity 
+  -resume
+
+```
+
 
 # How to use it?
 
