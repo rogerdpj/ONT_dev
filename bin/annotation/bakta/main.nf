@@ -39,7 +39,6 @@ process BAKTA {
     script:
 
     """
-    amrfinder_update --force_update --database /data/db-light/amrfinderplus-db
 
     bakta --db /data/db-light --threads ${task.cpus} --keep-contig-headers --output annotations_${sample_code} ${assembly_file}
 
