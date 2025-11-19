@@ -150,7 +150,11 @@ coverage_ch = fly_ch.info_cov
 
     bakta_ch = BAKTA (wrap_ch)
 
-    AGT(prokka_ch.prokka_gff, bakta_ch.bakta_gff3, wrap_ch)
+    agt_ch = prokka_ch.prokka_gff
+            .join(bakta_ch.bakta_gff3)
+            .join(wrap_ch.wrapped)
+
+    AGT(agt_ch)
 
     busco_ch = BUSCO(medaka_consensum_ch.assemble_medaka)
     
