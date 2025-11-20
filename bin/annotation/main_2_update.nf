@@ -10,9 +10,7 @@ process AGT {
     publishDir "${params.outdir}/2-Assembly/3-Annotations/AGT_${sample_code}", mode: 'copy'
 
     input:
-    path prokka_file
-    path bakta_file
-    tuple val(sample_code), path(assembly_file)
+    tuple val(sample_code), path(prokka_file), path(bakta_file), path(assembly_file)
 
     output:
     path "final_${sample_code}.gff3", emit: final_gff3

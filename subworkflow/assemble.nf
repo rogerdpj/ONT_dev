@@ -34,12 +34,16 @@ include { AMR                                           }     from '../bin/AMR/a
 include { AMR_2                                         }     from '../bin/AMR/resfinder/main'
 include { MLST                                          }     from '../bin/mlst/main'
 include { BAKTA_SET_DB                                  }     from '../bin/annotation/bakta/db_set'
+include { PLASMID_SEARCH                                }     from '../bin/plasmid/main'
 
 workflow assemble {
     krakenprocess_output = workflow_kraken_process()
     preprocess_output = pre_process(krakenprocess_output.DB_CH)
     assambleprocess_output = assamble_process(preprocess_output.prune_reads_ch, krakenprocess_output.DB_BAKTA_CH)
     amrprocess_output = amr_process (assambleprocess_output.consensum_file_ch)
+    if (params.plasmid) {
+        plasmidprocess_output = workflow_plasmid(assambleprocess_output.consensum_file_ch)
+    }
 }
 
 workflow workflow_kraken_process {
@@ -186,4 +190,16 @@ workflow amr_process {
     amr_2_ch = AMR_2(consensum_file_ch)
     mlst_ch = MLST(consensum_file_ch)
     
+}
+
+workflow workflow_plasmid {
+    take:
+    consensum_file_ch
+
+    main:
+    
+    //PLASMID SEARCH
+
+    plasmid_search_ch = PLASMID_SEARCH (consensum_file_ch)
+
 }

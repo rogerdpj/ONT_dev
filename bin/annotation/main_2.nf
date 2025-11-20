@@ -7,10 +7,10 @@ process AGT {
         params.agat.docker }"
 
     publishDir "${params.outdir}/2-Assembly/3-Annotations/AGT_${sample_code}", mode: 'copy'
+    
     input:
-    path prokka_file
-    path bakta_file
-    tuple val(sample_code), path(assembly_file)
+    tuple val(sample_code), path(prokka_file), path(bakta_file), path(assembly_file)
+
 
     output:
     path "fixed_combined_${sample_code}.gff3", emit: combine_gff3
