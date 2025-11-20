@@ -40,9 +40,9 @@ workflow assemble {
     krakenprocess_output = workflow_kraken_process()
     preprocess_output = pre_process(krakenprocess_output.DB_CH)
     assambleprocess_output = assamble_process(preprocess_output.prune_reads_ch, krakenprocess_output.DB_BAKTA_CH)
-    amrprocess_output = amr_process (assambleprocess_output.consensum_file_ch)
+    amrprocess_output = amr_process (assambleprocess_output.wrap_ch)
     if (params.plasmid) {
-        plasmidprocess_output = workflow_plasmid(assambleprocess_output.consensum_file_ch)
+        plasmidprocess_output = workflow_plasmid(assambleprocess_output.wrap_ch)
     }
 }
 
@@ -174,7 +174,7 @@ coverage_ch = fly_ch.info_cov
     multiqc_ch = MULTIQC( busco_ch.map{i -> i[1]}.collect(), quast_ch.map{i -> i[1]}.collect())
 
     emit:
-    consensum_file_ch
+    wrap_ch
 
 }
 
@@ -182,24 +182,24 @@ workflow amr_process {
 
     take:
 
-    consensum_file_ch
+    wrap_ch
 
     main:
-    
-    amr_ch = AMR(consensum_file_ch, params.organism)
-    amr_2_ch = AMR_2(consensum_file_ch)
-    mlst_ch = MLST(consensum_file_ch)
-    
+
+    amr_ch = AMR(wrap_ch, params.organism)
+    amr_2_ch = AMR_2(wrap_ch)
+    mlst_ch = MLST(wrap_ch)
+
 }
 
 workflow workflow_plasmid {
     take:
-    consensum_file_ch
+    wrap_ch
 
     main:
     
     //PLASMID SEARCH
 
-    plasmid_search_ch = PLASMID_SEARCH (consensum_file_ch)
+    plasmid_search_ch = PLASMID_SEARCH (wrap_ch)
 
 }

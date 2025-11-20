@@ -8,6 +8,7 @@ process WRAP {
 
 
     publishDir "${params.outdir}/2-Assembly", mode: 'copy'
+    
     input:
     tuple val(sample_code), path(medaka_fasta) 
 

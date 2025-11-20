@@ -9,7 +9,7 @@ process WRAP {
         params.autocycler.docker }"
 
     input:
-    tuple val(sample_code), path(polished_fasta)  // direct from POLISH output
+    tuple val(sample_code), path(polished_fasta)
 
     output:
     tuple val(sample_code), path("${sample_code}_polished_rewrapped.fasta"), emit: polished_rewrapped
