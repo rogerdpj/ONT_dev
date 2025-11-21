@@ -23,6 +23,7 @@ include { PREPARE_KRAKEN_DB                           }     from '../bin/kraken/
 include { QC                                          }     from '../bin/qc/main'
 include { TRIMMING                                    }     from '../bin/trimming/main'
 include { KRAKEN_ONT;SEQTK_PRUNE                      }     from '../bin/kraken/main'
+include { BAKTA_SET_DB                                }     from '../bin/annotation/bakta/db_set'
 include { AUTOCYCLER                                  }     from '../bin/assemble/autocycler/main'
 include { DNAAPLER                                    }     from '../bin/assemble/autocycler/dnaapler'
     /*
@@ -43,8 +44,9 @@ include { MULTIQC                                     }     from '../bin/qc/mult
 include { AMR                                         }     from '../bin/AMR/abricate/main'
 include { AMR_2                                       }     from '../bin/AMR/resfinder/main'
 include { PROKKA                                      }     from '../bin/annotation/prokka/main'
-include { BAKTA                                       }     from '../bin/annotation/bakta/main'
-include { AGT                                         }     from '../bin/annotation/main_2'
+include { BAKTA                                       }     from '../bin/annotation/bakta/main_3'
+include { AGT                                         }     from '../bin/annotation/main'
+include { PLASMID_SEARCH                              }     from '../bin/plasmid/main'
 
 /*
 
@@ -77,7 +79,10 @@ workflow hybrid {
     krakenprocess_output = workflow_kraken_process()
     preprocess_output = pre_process(krakenprocess_output.DB_CH)
     assambleprocess_output = assamble_process(preprocess_output.prune_reads_ch)
-    post_analysis_output = post_analysis(assambleprocess_output.dnaapler_ch)
+    post_analysis_output = post_analysis(assambleprocess_output.dnaapler_ch, krakenprocess_output.DB_BAKTA_CH)
+    if (params.plasmid) {
+        plasmidprocess_output = workflow_plasmid(post_analysis_output.wrap_ch)
+    }
    /* 
     vcprocess_output = workflow_vc()
     amrprocess_output = workflow_amr( preprocess_output.contigs_ch)
@@ -87,9 +92,12 @@ workflow hybrid {
 workflow workflow_kraken_process {
     db_ready_ch = PREPARE_KRAKEN_DB()
     DB_CH= db_ready_ch.db_ready
+    db_bakta_ready_ch = BAKTA_SET_DB()
+    DB_BAKTA_CH = db_bakta_ready_ch.db_bakta_dir
 
     emit:
     DB_CH
+    DB_BAKTA_CH
 }
 
 workflow pre_process {
@@ -216,6 +224,7 @@ workflow post_analysis {
     
     take:
     dnaapler_ch
+    DB_BAKTA_CH
 
     main:
     // Canal de lecturas
@@ -252,9 +261,28 @@ workflow post_analysis {
     AMR_2(wrap_ch)
 
     prokka_annotation_ch = PROKKA(wrap_ch)
-    bakta_annotation_ch = BAKTA(wrap_ch)
-    AGT(prokka_annotation_ch.prokka_gff, bakta_annotation_ch.bakta_gff3, wrap_ch)
+    bakta_annotation_ch = BAKTA(wrap_ch, DB_BAKTA_CH)
+
+    agt_ch = prokka_annotation_ch.prokka_gff
+            .join(bakta_annotation_ch.bakta_gff3)
+            .join(wrap_ch.polished_rewrapped)
+
+    AGT(agt_ch)
+
+    emit:
+    wrap_ch
     
+}
+
+workflow workflow_plasmid {
+    take:
+    wrap_ch
+
+    main:
+    
+    //PLASMID SEARCH
+
+    plasmid_search_ch = PLASMID_SEARCH (wrap_ch)
 
 }
 
