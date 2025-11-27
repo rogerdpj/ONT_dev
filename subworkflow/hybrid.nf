@@ -5,14 +5,14 @@ nextflow.enable.dsl=2
 
 log.info """\
 
-    WGS ONT - HYBRID VARIANT CALLING
+    WGS ONT - HYBRID ASSEMBLY
 
             P A R A M E T R E S
 ==============================================
 Configuration environemnt:
-    Out directory:                  $params.outdir
     ONT fastq directory:            $params.input
     Illumina fastq directory:       $params.short_inputs
+    Out directory:                  $params.outdir
     Organism:                       $params.organism
 """
     .stripIndent()

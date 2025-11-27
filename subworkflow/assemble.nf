@@ -23,6 +23,7 @@ include { NANOCOMP                                      }     from '../bin/qc/na
 include { SUB_SAMPLE_2 as ASSEMBLE                      }     from '../bin/assemble/fly/main'
 include { POLISHING_ROUND                               }     from '../bin/polishing/main'
 include { MEDAKA                                        }     from '../bin/assemble/medaka/main'
+include { DNAAPLER                                      }     from '../bin/polishing/dnaapler_assemble'
 include { WRAP                                          }     from '../bin/polishing/wrap_2'
 include { PROKKA                                        }     from '../bin/annotation/prokka/main'
 include { BAKTA                                         }     from '../bin/annotation/bakta/main_3'
@@ -153,7 +154,9 @@ coverage_ch = fly_ch.info_cov
 
     consensum_file_ch = medaka_consensum_ch.assemble_medaka
 
-    wrap_ch = WRAP(medaka_consensum_ch.assemble_medaka)
+    dna_apler_ch = DNAAPLER(medaka_consensum_ch.assemble_medaka)
+
+    wrap_ch = WRAP(dna_apler_ch.reoriented_assembly)
 
     prokka_ch = PROKKA (wrap_ch)
 

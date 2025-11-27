@@ -140,9 +140,11 @@ TMPDIR=/PATH/singularity/tmp
 
 e.g:
 ```
-SINGULARITY_TMPDIR=/mnt/dades/singularity/tmp \
-SINGULARITY_CACHEDIR=/mnt/dades/singularity/tmp \
-TMPDIR=/mnt/dades/singularity/tmp \
+SINGULARITY_TMPDIR=/mnt/dades/singularity/tmp
+SINGULARITY_CACHEDIR=/mnt/dades/singularity/tmp
+TMPDIR=/mnt/dades/singularity/tmp
+export NFX_SINGULARITY_CACHEDIR =/mnt/dades/singularity/tmp
+
 nextflow run main.nf --mode assemble --genome_size_file barcode_info.csv \
   --input '/PATH/TO/RUN/barcode*' \
   -w /PATH/WOR/DIRECTORY \

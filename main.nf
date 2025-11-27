@@ -9,9 +9,9 @@ log.info """\
 WGS ONT - N F   P I P E L I N E 
 ==============================================
 Configuration environment:
-    Out directory:             $params.outdir
-    Fastq directory:           $params.input
-    Reference directory:       $params.reference
+    Genome size file:          $params.genome_size_file
+    Mode:                      $params.mode
+    Profile:                   $params.profiles
 """
     .stripIndent()
 
@@ -48,7 +48,22 @@ def checkInputParams() {
     boolean fatal_error = false
 
     if (!params.input) {
-        log.warn("You need to provide a fastqDir (--fastqDir) or a bamDir (--bamDir)")
+        log.warn("You need to provide a valid input directory with --input")
         fatal_error = true
+    }
+    if (!params.genome_size_file) {
+        log.warn("You need to provide a valid genome size file with --genome_size_file")
+        fatal_error = true
+    }
+    if (!params.mode) {
+        log.warn("You need to provide a valid mode with --mode (assemble, hybrid)")
+        fatal_error = true
+    }
+    if (!params.mode == 'hybrid' && !params.mode == 'assemble') {
+        log.warn("You need to provide a valid short read data with --short_reads when using hybrid mode")
+        fatal_error = true
+    }
+    if (fatal_error) {
+        error "Missing one or more required parameters"
     }
 }

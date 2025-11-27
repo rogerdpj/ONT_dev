@@ -10,9 +10,9 @@ log.info """\
             P A R A M E T R E S
 ==============================================
 Configuration environemnt:
-    Out directory:             $params.outdir
     Fastq directory:           $params.input
-    Reference directory:       $params.reference
+    Short reads directory:     $params.short_reads
+    Out directory:             $params.outdir
 """
     .stripIndent()
 
