@@ -8,7 +8,7 @@
 
 
 ## Introduction
-This repository provides a Nextflow-based pipeline for whole-genome sequencing (WGS) analysis, optimised for **Oxford Nanopore Technology (ONT)** data, with supporting **Illumina** data for simple or hybrid assemblies. It is designed to offer an automated, reproducible, and scalable solution for processing large-scale genomic data in clinical microbiology research.
+This Nextflow pipeline provides an automated, reproducible and scalable solution for whole-genome sequencing (WGS) analysis in clinical microbiology research optimised for **Oxford Nanopore Technology (ONT)** data. It also supports **Illumina** data for *the novo* hybrid assemblies.
 
 ## Contents
 - [Pipeline summary](#pipeline-summary)
@@ -26,6 +26,8 @@ This repository provides a Nextflow-based pipeline for whole-genome sequencing (
 All modes in the pipeline include the following steps:
 
 1. **Long reads QC and trimming**: Assessment of read quality before and after filtering using [Nanoplot](https://github.com/wdecoster/NanoPlot) and summarised with [Nanocomp](https://github.com/wdecoster/nanocomp). Filtering of low-quality bases and short reads is performed using [Filtlong](https://github.com/rrwick/Filtlong) followed by removal of adapter ONT adapter sequences using [Porechop](https://github.com/rrwick/Porechop).
+
+2. **Contaminant sequence removal**: [Kraken](https://github.com/DerrickWood/kraken) was used to classify non-bacterial reads and [SEQTK](https://github.com/lh3/seqtk) to filter out the reads flagged as contamimnats.
 
 ### mode --assemble
 
