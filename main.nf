@@ -11,7 +11,7 @@ WGS ONT - N F   P I P E L I N E
 Configuration environment:
     Genome size file:          $params.genome_size_file
     Mode:                      $params.mode
-    Profile:                   $params.profiles
+    profile:                   $workflow.profile
 """
     .stripIndent()
 
@@ -59,8 +59,12 @@ def checkInputParams() {
         log.warn("You need to provide a valid mode with --mode (assemble, hybrid)")
         fatal_error = true
     }
-    if (!params.mode == 'hybrid' && !params.mode == 'assemble') {
-        log.warn("You need to provide a valid short read data with --short_reads when using hybrid mode")
+    if( params.mode == 'hybrid' && !params.short_reads ) {
+        log.warn "You need to provide a valid short read data with --short_reads when using hybrid mode"
+        fatal_error = true
+    }
+    if( !['docker','singularity','conda'].contains( workflow.profile ) ) {
+        log.warn "You need to provide a valid profile with -profile (docker, singularity, conda)"
         fatal_error = true
     }
     if (fatal_error) {
