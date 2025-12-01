@@ -17,7 +17,8 @@ This Nextflow pipeline provides an automated, reproducible and scalable solution
 - [Installation](#installation)
 - [How to Use It](#how-to-use-it)
     - [Parameters](#parameters)
-- [References](#reference)
+- [Output](#output)
+- [References](#references)
 
 
 
@@ -25,13 +26,15 @@ This Nextflow pipeline provides an automated, reproducible and scalable solution
 
 All modes in the pipeline include the following steps:
 
-1. **Long reads QC and trimming**: Assessment of read quality before and after filtering using [Nanoplot](https://github.com/wdecoster/NanoPlot) and summarised with [Nanocomp](https://github.com/wdecoster/nanocomp). Filtering of low-quality bases and short reads is performed using [Filtlong](https://github.com/rrwick/Filtlong) followed by removal of adapter ONT adapter sequences using [Porechop](https://github.com/rrwick/Porechop).
+1. **Long reads QC and trimming**: Assessment of read quality before and after filtering using [Nanoplot](https://github.com/wdecoster/NanoPlot). Filtering of low-quality bases and short reads is performed using [Filtlong](https://github.com/rrwick/Filtlong) followed by removal of ONT adapter sequences using [Porechop](https://github.com/rrwick/Porechop). All Nanoplot reports are summarised using [Nanocomp](https://github.com/wdecoster/nanocomp).
 
-2. **Contaminant sequence removal**: [Kraken](https://github.com/DerrickWood/kraken) was used to classify non-bacterial reads and [SEQTK](https://github.com/lh3/seqtk) to filter out the reads flagged as contamimnats.
+2. **Contaminant sequence removal**: The taxonomic sequence classifier [Kraken2](https://github.com/DerrickWood/kraken2) is used to identify contaminant non-bacterial reads followed by [SEQTK](https://github.com/lh3/seqtk) to filter out all reads flagged as contaminants.
+
+From this point onwards two modes are available: If only ONT data is available **--mode assemble**; if both ONT and Illumina data are available, you should select **--mode hybrid** to perform a hybrid assembly.
 
 ### mode --assemble
 
-2. **Assembly**: *De novo* assembly using the single-molecule assembler [Flye](https://github.com/mikolmogorov/Flye) followed by multiple rounds of **polishing** and the construction of a consensus sequence using [Medaka](https://github.com/nanoporetech/medaka). 
+2. **Assembly**: *De novo* assembly using the single-molecule assembler [Flye](https://github.com/mikolmogorov/Flye) followed by multiple rounds of **polishing** and the construction of a consensus sequence using [Medaka](https://github.com/nanoporetech/medaka). Genome assemblies are then reoriented using [dnaapler](https://github.com/gbouras13/dnaapler).
 
     * <ins>Polishing process</ins>: The optimal number of polishing rounds is determined automatically using the CART algorithm. The prediction is based on multiple parameters, which include error rate, N50/L50, genome coverage, Total Length of Matches, Average Occurrences, Distinct Minimizers, and processing time per round.
 
@@ -93,29 +96,31 @@ All modes in the pipeline include the following steps:
 
 ### mode --hybrid
 
-2. **Assembly**: The [Autocycler](https://github.com/rrwick/Autocycler) tool is used to generate consensus *de novo* long-read assembly. The long-read assembly is then polished with the short Illumina reads following these steps:
+2. **Assembly**: The [Autocycler](https://github.com/rrwick/Autocycler) tool is used to generate a consensus *de novo* long-read assembly by combining multiple alternative assemblies produced by different assemblers (e.g. Canu, Flye, NextDenovo, etc.). Afterwards, the consensus long-read genome is reoriented using [dnaapler](https://github.com/gbouras13/dnaapler) and then polished with the short Illumina reads following these steps:
 
-    * <ins>Short reads QC and trimming</ins>: Assessment of short read quality before and after trimming using [FastQC](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/) and summarised with [MultiQC](https://github.com/MultiQC/MultiQC). Filtering of low-quality bases and short reads is performed with [Fastp](https://github.com/OpenGene/fastp).
+    * <ins>Short reads QC and trimming</ins>: Trimming and filtering of low-quality bases and short reads are performed with [Fastp](https://github.com/OpenGene/fastp). Short read quality is assessed before and after trimming using [FastQC](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/), and summarised using [MultiQC](https://github.com/MultiQC/MultiQC).
 
-    * <ins>Mapping and polishing</ins>: Short reads are mapped against the genome assembly using [bwa mem](https://github.com/lh3/bwa) followed by a filtering and polishing step to improve the genome assembly using [Polipolish](https://github.com/rrwick/Polypolish).
+    * <ins>Mapping and polishing</ins>: Short reads are mapped to the consensus genome assembly using [BWA-MEM](https://github.com/lh3/bwa), followed by a filtering and polishing step to improve the assembly using [Polipolish](https://github.com/rrwick/Polypolish).
 
-Once the consensus genome assemblies are obtained they are all processed the same way:
+___________________________________
+After the **consensus genome assemblies** have been generated, all assemblies are processed using the same workflow:
 
-3. **Assembly and genome QC**:  Following genome assembly, structural quality metrics are evaluated with [QUAST](https://quast.sourceforge.net/), and genome completeness is assessed using [BUSCO](https://busco.ezlab.org/). A final report is generated with [MultiQC](https://github.com/MultiQC/MultiQC).
+3. **Assembly and genome QC**:  Structural quality metrics are evaluated with [QUAST](https://quast.sourceforge.net/), and genome completeness is assessed using [BUSCO](https://busco.ezlab.org/). A final combined report is generated with [MultiQC](https://github.com/MultiQC/MultiQC).
 
-4. **Annotation**: Genome annotation is carried out with both [Prokka](https://github.com/tseemann/prokka) and [Bakta](https://github.com/oschwengers/bakta). The resulting gff annotation files are fixed and combine with [AGAT](https://github.com/NBISweden/AGAT).
+4. **Annotation**: Genome annotation is performed using both [Prokka](https://github.com/tseemann/prokka) and [Bakta](https://github.com/oschwengers/bakta). The resulting GFF annotation files from both annotation tools are cleaned and combined using [AGAT](https://github.com/NBISweden/AGAT).
 
 4. **Post-assembly analyses**:
-    *   Mass screening of contigs for antimicrobial resistance or virulence genes using [ABRIcate](https://github.com/tseemann/abricate).
+    * Mass screening of contigs for antimicrobial resistance and virulence genes using [ABRIcate](https://github.com/tseemann/abricate).
     * Identification of antimicrobial resistance genes and point mutations in protein and/or assembled nucleotide sequences using [AMRFinder](https://github.com/ncbi/amr).
-    * Scan genome against traditional PubMLST schemes using [MLST](https://github.com/tseemann/mlst). 
+    * Screening of genomes against traditional PubMLST schemes using [MLST](https://github.com/tseemann/mlst).
+    * Plasmid analysis: In case --plasmid option is added in the command line, the [mob-suite](https://github.com/phac-nml/mob-suite) tool is used to predict and identify the plasmid sequences from the assemblies. 
 
 
 # Installation
-The prerequisites to run the pipeline are:
-- Install [Nextflow](https://github.com/nextflow-io/nextflow)
-- Install [Docker](https://github.com/docker/docker-install) or [Singularity](https://github.com/sylabs/singularity-admindocs/blob/main/installation.rst) for container support
-- Ensure [Java 8](https://github.com/winterbe/java8-tutorial) or higher is installed
+Prerequisites to run the pipeline:
+- Install [Nextflow](https://github.com/nextflow-io/nextflow).
+- Install [Docker](https://github.com/docker/docker-install) or [Singularity](https://github.com/sylabs/singularity-admindocs/blob/main/installation.rst) for container support.
+- Ensure that [Java 8](https://github.com/winterbe/java8-tutorial) or a more recent version is installed.
 
 Clone the Repository:
 
@@ -126,42 +131,31 @@ git clone https://github.com/AMRmicrobiology/ONT_BACTERIAL_ANALYSIS.git
 # Move inside the main directory
 cd ONT_BACTERIAL_ANALYSIS
 ```
-<!-- compl -->
-### Local (conda)
 
-  ```
-  conda create -n Nanopore -f nanoporeWGS.yml busco.yml
-  conda activate Nanopore
-  ```
-### Local (Singularity)
-Remember to define the path for tmp files:
-
+#### Local (Singularity)
+If you are running the pipeline locally, remember to define the path for Singularity temporary files and cache:
+```
 SINGULARITY_TMPDIR=/PATH/singularity/tmp
 SINGULARITY_CACHEDIR=/PATH/singularity/cache
 TMPDIR=/PATH/singularity/tmp
-
+export NFX_SINGULARITY_CACHEDIR =/PATH/singularity/tmp
+```
 e.g:
 ```
 SINGULARITY_TMPDIR=/mnt/dades/singularity/tmp
 SINGULARITY_CACHEDIR=/mnt/dades/singularity/tmp
 TMPDIR=/mnt/dades/singularity/tmp
-export NFX_SINGULARITY_CACHEDIR =/mnt/dades/singularity/tmp
-
-nextflow run main.nf --mode assemble --genome_size_file barcode_info.csv \
-  --input '/PATH/TO/RUN/barcode*' \
-  -w /PATH/WOR/DIRECTORY \
-  -profile singularity 
-  -resume
-
+export NFX_SINGULARITY_CACHEDIR=/mnt/dades/singularity/tmp
 ```
-
+>[!NOTE]
+Conda environments are listed and created but have not been tested.
 
 # How to use it?
 
-Inside the ONT_BACTERIAL_ANALYSIS directory, modify the file  **genome_size.csv** to add for each barcode its expected genome size (bp) and the sample code you want to assign:
+Inside the ONT_BACTERIAL_ANALYSIS directory, modify the file **barcode_info.csv** to add the expected genome size (bp) and sample code you want to assign to each barcode:
 
 >[!IMPORTANT]
-The sample code names should not include "-"
+The sample code names should not include "-".
 
 e.g.
 ```
@@ -211,8 +205,9 @@ nextflow run main.nf --mode hybrid --genome_size_file barcode_info.csv --input '
 │--keep_percent     INTEGER     Throw out the worst (100-x)% of read bases [default: 90]                      │
 ╰─────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
 ```
+## Output
 
-## REFERENCE
+## References
 
 [Benchmarking reveals superiority of deep learning variant callers on bacterial Nanopore sequence data](https://elifesciences.org/articles/98300)
 [How low can you go? Short-read polishing of Oxford Nanopore bacterial genome assemblies](https://www.microbiologyresearch.org/content/journal/mgen/10.1099/mgen.0.001254)
