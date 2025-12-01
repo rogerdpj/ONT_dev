@@ -232,49 +232,49 @@ This is the forder architecture and the content of the output data directory:
             </thead>
             <tbody>
                 <tr>
-                    <td rowspan="2" align="left">1-QC </td>
-                    <td align="left">data_QC </td>
-                    <td align="left">Individual initial Nanoplot results folders and Nanocomp summary of all reports before and after trimming</td>
+                    <td rowspan="2" align="center">1-QC </td>
+                    <td align="center">data_QC </td>
+                    <td align="center">Individual initial Nanoplot results folders and Nanocomp summary of all reports before and after trimming</td>
                 </tr>
                 <tr>
-                    <td align="left">genomeQC </td>
-                    <td align="left">Individual BUSCO and QUAST reports folders and multiQC combined report of all samples</td>
+                    <td align="center">genomeQC </td>
+                    <td align="center">Individual BUSCO and QUAST reports folders and multiQC combined report of all samples</td>
                 </tr>
                 <tr>
-                    <td rowspan="4" align= "left"> 2-Assemby </td>
-                    <td align= "left">  </td>
-                    <td align= "left"> All final consensus genomes assemblies ("sample_ID"_consensus_wrapped.fasta)  </td>
+                    <td rowspan="4" align= "center"> 2-Assemby </td>
+                    <td align= "center">  </td>
+                    <td align= "center"> All final consensus genomes assemblies ("sample_ID"_consensus_wrapped.fasta)  </td>
                 </tr>
                 <tr>
-                    <td align= "left"> 1-Fly_structural </td>
-                    <td align= "left"> Nanostats results and Flye output results directories containing the graph files  </td>
+                    <td align= "center"> 1-Fly_structural </td>
+                    <td align= "center"> Nanostats results and Flye output results directories containing the graph files  </td>
                 </tr>
                 <tr>
-                    <td align= "left"> 2-Medaka_results </td>
-                    <td align= "left"> Medaka output directories </td>
+                    <td align= "center"> 2-Medaka_results </td>
+                    <td align= "center"> Medaka output directories </td>
                 </tr>
                 <tr>
-                    <td align= "left"> 3-Annotations </td>
-                    <td align= "left"> All combined files produced by AGAT from Bakta and Prokka annotation tools are located here. Also, Bakta and Prokka output directories </td>
+                    <td align= "center"> 3-Annotations </td>
+                    <td align= "center"> All combined files produced by AGAT from Bakta and Prokka annotation tools are located here. Also, Bakta and Prokka output directories </td>
                 </tr>
                 <tr>
-                    <td rowspan="2" align= "left"> 3-AMR </td>
-                    <td align="left"> ABRICATE </td>
-                    <td align="left">	ABRICATE search results </td>
+                    <td rowspan="2" align= "center"> 3-AMR </td>
+                    <td align="center"> ABRICATE </td>
+                    <td align="center">	ABRICATE search results </td>
                 </tr>
                                 <tr>
-                    <td align= "left"> AMRFinder </td>
-                    <td align= "left"> AMRFinder search results </td>
+                    <td align= "center"> AMRFinder </td>
+                    <td align= "center"> AMRFinder search results </td>
                 </tr>
                 <tr>
-                    <td rowspan="1" align= "left"> 4-MLST </td>
-                    <td align="left">  </td>
-                    <td align="left">	MLST results </td>
+                    <td rowspan="1" align= "center"> 4-MLST </td>
+                    <td align="center">  </td>
+                    <td align="center">	MLST results </td>
                 </tr>
                 <tr>
-                    <td rowspan="1" align= "left"> 5-Plasmids </td>
-                    <td align= "left"> </td>
-                    <td align ="left"> MOB-suite plasmid tool output directories  </td>
+                    <td rowspan="1" align= "center"> 5-Plasmids </td>
+                    <td align= "center"> </td>
+                    <td align ="center"> MOB-suite plasmid tool output directories  </td>
                 </tr>
             <t/body>
         </table>
