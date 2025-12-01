@@ -16,7 +16,7 @@ This Nextflow pipeline provides an automated, reproducible and scalable solution
     - [Hybrid](#mode---hybrid)
 - [Installation](#installation)
 - [How to Use It](#how-to-use-it)
-    - [Parameters](#parameters)
+    - [Usage and Parameters](#usage-and-parameters)
 - [Output](#output)
 - [References](#references)
 
@@ -179,33 +179,107 @@ nextflow run main.nf --mode assemble --genome_size_file barcode_info.csv --input
 nextflow run main.nf --mode hybrid --genome_size_file barcode_info.csv --input '/path/to/data/barcode*' --short_inputs '/path/to/data/*_{1,2}.fastq.gz' -profile <docker/singularity/conda>
 ```
 
-### Parameters
+### Usage and parameters
 
 ```bash
-╭─ Required Options ──────────────────────────────────────────────────────────────────────────────────────────╮
-│--mode             TEXT    Selection of the pipeline assemble/hybrid [required]                              │   
-│--input            TEXT    Input barcode* folder(s) containing the long reads .fastq files [required]        │
-│-profile           TEXT    Selection of execution profile (docker, singularity or conda) [required]          │
-│--genome_size_file TEXT    Path to the .csv file with barcode, size and sample name information [required]   │  
-│-profile           TEXT    Selection of execution profile (docker, singularity or conda) [required]          │
-│                                                                                                             │
-│  Pipeline specific                                                                                          │
-│--short_inputs     TEXT    (--mode hybrid) Input FASTQ paired-end files (.fastq.gz format)  [required]       │
-╰─────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
-╭─ Additional Options ────────────────────────────────────────────────────────────────────────────────────────╮
-│--outdir           PATH    Directory to write the output [default: out]                                      │
-│-w                 PATH    Path to the work dir. where temporary files will be written [default: ./work ]    │
-│--organism         TEXT    To be used by Abricate. Abricate uses specific databases for Escherichia coli     │
-│                           and Klebsiella pneumoniae [default: "" ]                                          │
-│--help                     Show this message and exit                                                        │      
-╰─────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
-╭─ Long-read filtering Options ───────────────────────────────────────────────────────────────────────────────╮
-│--min_length       INTEGER     Minimum length threshold (bp) [default: 1000]                                 │
-│--min_mean_q       INTEGER     Minimum mean quality threshold [default: 10]                                  │
-│--keep_percent     INTEGER     Throw out the worst (100-x)% of read bases [default: 90]                      │
-╰─────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+usage: nextflow run main.nf [--help] [--mode VAR] [--genome_size_file VAR] [--input VAR] [--short_inputs VAR] [--outdir VAR] [--organism VAR] [--min_length VAR] [--min_mean_q VAR] [--keep_percent VAR] [-w VAR] [-profile VAR]
+
+Input data arguments
+  --mode             TEXT        Selection of the pipeline assemble/hybrid [required]
+  --input            PATH        Input barcode* folder(s) containing the long reads .fastq.gz files [required]
+  --genome_size_file PATH        Path to the .csv file with barcode, size and sample name information [required]
+  Pipeline specific
+  --short_inputs     PATH        (--mode hybrid) Input FASTQ paired-end files named *_{1,2} (.fastq.gz format) [required]
+
+Nextflow arguments
+  -profile           TEXT        Selection of execution profile (docker, singularity or conda) [required]
+  -w                 PATH        Path to the work dir. where temporary files will be written [default: ./work ]
+
+Output arguments
+  --outdir           PATH        Directory to write the output [default: ./out]
+
+Optional arguments 
+  --help                         Show this message and exit      
+  --plasmid          BOOLEAN     Add this parameter to identify and type plasmid sequences in your assembly [default: false]
+
+Long-read filtering arguments
+  --min_length       INTEGER     Minimum length threshold (bp) [default: 1000]
+  --min_mean_q       INTEGER     Minimum mean quality threshold [default: 10]
+  --keep_percent     INTEGER     Throw out the worst (100-x)% of read bases [default: 90]
+
+AMR arguments
+  --organism         TEXT        By default, ABRicate searches the following databases: vfdb_full, resfinder, plasmidfinder, and card.
+If Escherichia coli or Klebsiella pneumoniae is specified, ecoli_vf and argannot will be searched, respectively, instead of vfdb_full.
+[default: ""]. If specific databases should be searched, use the following argument:
+  --abricate_db      TEXT        List of databases to be searched by Abricate [default: ["vfdb_full, resfinder, plasmidfinder, card"]]
+
+Databases arguments
+  --bakta_db_define  PATH        Define the path to the user downloaded database to be used by Bakta. By default the database is downloaded if no argument is added. Another option is to copy-paste the database directly to the "./bakta_db" directory [default: ""]
+  --db_select        PATH        Kraken2 database to use for taxonomy classification: db_16GB or db_full_60GB. Another option is to copy-paste the database directly to the "./kraken_db" directory [default: "db_16GB"]
+
 ```
 ## Output
+This is the forder architecture and the content of the output data directory:
+
+<center>
+        <table>
+            <thead>
+                <tr>
+                    <th align= "center"> Folder </th>
+                    <th align= "center"> Subfolder </th>
+                    <th align= "center"> Description </th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td rowspan="2" align="left">1-QC </td>
+                    <td align="left">data_QC </td>
+                    <td align="left">Individual initial Nanoplot results folders and Nanocomp summary of all reports before and after trimming</td>
+                </tr>
+                <tr>
+                    <td align="left">genomeQC </td>
+                    <td align="left">Individual BUSCO and QUAST reports folders and multiQC combined report of all samples</td>
+                </tr>
+                <tr>
+                    <td rowspan="4" align= "left"> 2-Assemby </td>
+                    <td align= "left">  </td>
+                    <td align= "left"> All final consensus genomes assemblies ("sample_ID"_consensus_wrapped.fasta)  </td>
+                </tr>
+                <tr>
+                    <td align= "left"> 1-Fly_structural </td>
+                    <td align= "left"> Nanostats results and Flye output results directories containing the graph files  </td>
+                </tr>
+                <tr>
+                    <td align= "left"> 2-Medaka_results </td>
+                    <td align= "left"> Medaka output directories </td>
+                </tr>
+                <tr>
+                    <td align= "left"> 3-Annotations </td>
+                    <td align= "left"> All combined files produced by AGAT from Bakta and Prokka annotation tools are located here. Also, Bakta and Prokka output directories </td>
+                </tr>
+                <tr>
+                    <td rowspan="2" align= "left"> 3-AMR </td>
+                    <td align="left"> ABRICATE </td>
+                    <td align="left">	ABRICATE search results </td>
+                </tr>
+                                <tr>
+                    <td align= "left"> AMRFinder </td>
+                    <td align= "left"> AMRFinder search results </td>
+                </tr>
+                <tr>
+                    <td rowspan="1" align= "left"> 4-MLST </td>
+                    <td align="left">  </td>
+                    <td align="left">	MLST results </td>
+                </tr>
+                <tr>
+                    <td rowspan="1" align= "left"> 5-Plasmids </td>
+                    <td align= "left"> </td>
+                    <td align ="left"> MOB-suite plasmid tool output directories  </td>
+                </tr>
+            <t/body>
+        </table>
+        </center>
+
 
 ## References
 
