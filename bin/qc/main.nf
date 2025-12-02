@@ -1,5 +1,5 @@
 process QC {
-    tag "Quality control RAW data"
+    tag "QC RAW data ${barcode}"
     label 'env_nanoplot'
     
     cache 'deep'

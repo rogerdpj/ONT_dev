@@ -1,5 +1,5 @@
 process BAKTA {
-    tag "BAKTA ANNOTATIONS ${sample_code}" 
+    tag "BAKTA annotation for ${sample_code}" 
 
     container {
         workflow.containerEngine == 'singularity' ?

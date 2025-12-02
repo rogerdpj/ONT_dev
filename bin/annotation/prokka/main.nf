@@ -1,5 +1,5 @@
 process PROKKA {
-    tag "PROKKA ANNOTATION"
+    tag "PROKKA annotation for ${sample_code}"
     label 'prokka_annotations'
 
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?

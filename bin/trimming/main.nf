@@ -1,5 +1,5 @@
 process TRIMMING {
-    tag "prunning process"
+    tag "Prunning of ${barcode_id}"
     label 'env_trimming_read'
 
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?

@@ -1,5 +1,5 @@
 process DNAAPLER {
-    tag "dnaapler ${sample_code}"
+    tag "Dnaapler reorientation of ${sample_code}"
     label 'dna_apler'
 
 

@@ -1,5 +1,5 @@
 process BAKTA {
-    tag "BAKTA ANNOTATIONS"
+    tag "BAKTA annotation for ${sample_code}"
     label 'bakta_annotations'
     
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?

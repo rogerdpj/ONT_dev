@@ -1,5 +1,5 @@
 process SUB_SAMPLE_2 {
-    tag "ASSEMBLE FLYE LONG READS ${sample_code}"
+    tag "Flye assembly of ${sample_code}/${barcode_id} "
     label 'flye_long_reads'
 
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?

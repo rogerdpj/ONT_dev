@@ -1,5 +1,5 @@
 process BUSCO {
-    tag "GENOME COMPLETENESS"
+    tag "Assessing genome completeness for ${sample_code}"
     label 'env_busco'
 
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?

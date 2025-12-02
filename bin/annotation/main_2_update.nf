@@ -1,5 +1,5 @@
 process AGAT {
-    tag "MERGE ANNOTATIONS (${sample_code})"
+    tag "Merging annotations with AGAT for ${sample_code}"
     label 'agat_enhanced'
 
     

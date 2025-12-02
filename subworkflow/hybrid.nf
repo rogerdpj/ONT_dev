@@ -5,7 +5,7 @@ nextflow.enable.dsl=2
 
 log.info """\
 
-    WGS ONT - HYBRID ASSEMBLY
+           ONT - HYBRID ASSEMBLY
 
             P A R A M E T E R S
 ==============================================

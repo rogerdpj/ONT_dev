@@ -1,5 +1,5 @@
 process QUAST {
-    tag "QC_ASSEMBLE"
+    tag "Assessing assembly quality for ${sample_code}"
     label 'env_quast'
 
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?

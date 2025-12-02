@@ -1,5 +1,5 @@
 process NANOCOMP {
-    tag "Nanocomp process"
+    tag "Creating Nanocomp summary"
     label 'env_nanocomp'
 
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?

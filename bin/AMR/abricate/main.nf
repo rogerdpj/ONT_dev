@@ -1,5 +1,5 @@
 process AMR {
-    tag "ABRICATE PROCESS"
+    tag "ABRICATE search for ${sample_code}"
     label 'abricate_tool'
     
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?

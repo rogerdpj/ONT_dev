@@ -1,5 +1,5 @@
 process AMR_2 {
-    tag "AMRFinder PROCESS"
+    tag "AMRFinder search for ${sample_code}"
     label 'amrfinder_plus'
     
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?

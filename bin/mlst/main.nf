@@ -1,5 +1,5 @@
 process MLST {
-    tag "MLST-annotation process ${sample_code}"
+    tag "MLST-annotation for ${sample_code}"
     label 'env_mlst'
     
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
