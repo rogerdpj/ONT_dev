@@ -118,7 +118,7 @@ After the **consensus genome assemblies** have been generated, all assemblies ar
 
 # Installation
 Prerequisites to run the pipeline:
-- Install [Nextflow](https://github.com/nextflow-io/nextflow).
+- Install [Nextflow](https://github.com/nextflow-io/nextflow) (Ver. ≥ 25.10.0).
 - Install [Docker](https://github.com/docker/docker-install) or [Singularity](https://github.com/sylabs/singularity-admindocs/blob/main/installation.rst) for container support.
 - Ensure that [Java 8](https://github.com/winterbe/java8-tutorial) or a more recent version is installed.
 
@@ -182,7 +182,7 @@ nextflow run main.nf --mode hybrid --genome_size_file barcode_info.csv --input '
 ### Usage and parameters
 
 ```bash
-usage: nextflow run main.nf [--help] [--mode VAR] [--genome_size_file VAR] [--input VAR] [--short_inputs VAR] [--outdir VAR] [--organism VAR] [--min_length VAR] [--min_mean_q VAR] [--keep_percent VAR] [-w VAR] [-profile VAR]
+usage: nextflow run main.nf [--help] [--mode VAR] [--genome_size_file VAR] [--input VAR] [--short_inputs VAR] [--outdir VAR] [--organism VAR] [--min_length VAR] [--min_mean_q VAR] [--keep_percent VAR] [--plasmid] [--bakta_db_define VAR] [--db_select VAR] [--abricate_db VAR] [-w VAR] [-profile VAR]
 
 Input data arguments
   --mode             TEXT        Selection of the pipeline assemble/hybrid [required]
@@ -208,18 +208,22 @@ Long-read filtering arguments
   --keep_percent     INTEGER     Throw out the worst (100-x)% of read bases [default: 90]
 
 AMR arguments
-  --organism         TEXT        By default, ABRicate searches the following databases: vfdb_full, resfinder, plasmidfinder, and card.
-If Escherichia coli or Klebsiella pneumoniae is specified, ecoli_vf and argannot will be searched, respectively, instead of vfdb_full.
-[default: ""]. If specific databases should be searched, use the following argument:
-  --abricate_db      TEXT        List of databases to be searched by Abricate [default: ["vfdb_full, resfinder, plasmidfinder, card"]]
-
+  --organism         TEXT        By default, ABRicate searches the following databases: vfdb_full, resfinder, plasmidfinder, and card. If Escherichia coli or Klebsiella pneumoniae is specified, ecoli_vf and argannot will be searched, respectively, instead of vfdb_full [default: ""]. 
+  
 Databases arguments
-  --bakta_db_define  PATH        Define the path to the user downloaded database to be used by Bakta. By default the database is downloaded if no argument is added. Another option is to copy-paste the database directly to the "./bakta_db" directory [default: ""]
-  --db_select        PATH        Kraken2 database to use for taxonomy classification: db_16GB or db_full_60GB. Another option is to copy-paste the database directly to the "./kraken_db" directory [default: "db_16GB"]
+  --bakta_db_define  PATH        Define the path to the user downloaded database to be used by Bakta. By default the database is downloaded if no argument is added. Another option is to copy-paste the database directly to the "./bakta_db" directory
+  --db_select        TEXT/PATH   Kraken2 database to use for taxonomy classification. The options "db_16GB" or "db_full_60GB" are downloaded automatically if specified. Alternatively, a path to a user-provided database may be supplied. Another option is to copy-paste the database directly into the "./kraken_db" directory [default: "db_16GB"]
+  --abricate_db      PATH        Path to the user downloaded databases to be used by Abricate
 
 ```
 ## Output
 This is the forder architecture and the content of the output data directory:
+
+<style>
+  table td, table th {
+    white-space: nowrap;
+  }
+</style>
 
 <center>
         <table>
@@ -237,7 +241,7 @@ This is the forder architecture and the content of the output data directory:
                     <td align="center">Individual initial Nanoplot results folders and Nanocomp summary of all reports before and after trimming</td>
                 </tr>
                 <tr>
-                    <td align="center">genomeQC </td>
+                    <td align="center">genome_QC </td>
                     <td align="center">Individual BUSCO and QUAST reports folders and multiQC combined report of all samples</td>
                 </tr>
                 <tr>

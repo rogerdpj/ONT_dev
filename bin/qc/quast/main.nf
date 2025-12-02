@@ -6,7 +6,7 @@ process QUAST {
         "docker://${params.short_wgs.docker}" :
         params.short_wgs.docker }"
 
-    publishDir "${params.outdir}/1-QC/genomeQC/QUAST", mode: 'copy'
+    publishDir "${params.outdir}/1-QC/genome_QC/QUAST", mode: 'copy'
 
     errorStrategy 'ignore'
 

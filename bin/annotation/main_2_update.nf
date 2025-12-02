@@ -1,4 +1,4 @@
-process AGT {
+process AGAT {
     tag "MERGE ANNOTATIONS (${sample_code})"
     label 'agat_enhanced'
 

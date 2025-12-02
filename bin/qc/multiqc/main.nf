@@ -6,7 +6,7 @@ process MULTIQC {
         "docker://${params.short_wgs.docker}" :
         params.short_wgs.docker }"
  
-    publishDir "${params.outdir}/1-QC/genomeQC", mode: 'copy'
+    publishDir "${params.outdir}/1-QC/genome_QC", mode: 'copy'
 
     input:
     path (quast_folder)

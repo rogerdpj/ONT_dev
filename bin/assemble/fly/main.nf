@@ -1,12 +1,12 @@
 process SUB_SAMPLE_2 {
-    tag "ASSAMBLE FLY LONG READS ${sample_code}"
-    label 'fly_long_reads'
+    tag "ASSEMBLE FLYE LONG READS ${sample_code}"
+    label 'flye_long_reads'
 
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
         "docker://${params.long_read.docker}" :
         params.long_read.docker }"
         
-    publishDir "${params.outdir}/2-Assembly/1-Fly_structural", mode: 'copy'
+    publishDir "${params.outdir}/2-Assembly/1-Flye_structural", mode: 'copy'
 
     input:
 

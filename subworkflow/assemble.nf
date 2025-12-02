@@ -27,7 +27,7 @@ include { DNAAPLER                                      }     from '../bin/polis
 include { WRAP                                          }     from '../bin/polishing/wrap_2'
 include { PROKKA                                        }     from '../bin/annotation/prokka/main'
 include { BAKTA                                         }     from '../bin/annotation/bakta/main_3'
-include { AGT                                           }     from '../bin/annotation/main'
+include { AGAT                                           }     from '../bin/annotation/main'
 include { BUSCO                                         }     from '../bin/qc/busco/main'
 include { QUAST                                         }     from '../bin/qc/quast/main'
 include { MULTIQC                                       }     from '../bin/qc/multiqc/main'
@@ -166,7 +166,7 @@ coverage_ch = fly_ch.info_cov
             .join(bakta_ch.bakta_gff3)
             .join(wrap_ch.wrapped)
 
-    AGT(agt_ch)
+    AGAT(agt_ch)
 
     busco_ch = BUSCO(medaka_consensum_ch.assemble_medaka)
     

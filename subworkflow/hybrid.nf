@@ -45,7 +45,7 @@ include { AMR                                         }     from '../bin/AMR/abr
 include { AMR_2                                       }     from '../bin/AMR/resfinder/main'
 include { PROKKA                                      }     from '../bin/annotation/prokka/main'
 include { BAKTA                                       }     from '../bin/annotation/bakta/main_3'
-include { AGT                                         }     from '../bin/annotation/main'
+include { AGAT                                         }     from '../bin/annotation/main'
 include { PLASMID_SEARCH                              }     from '../bin/plasmid/main'
 
 /*
@@ -267,7 +267,7 @@ workflow post_analysis {
             .join(bakta_annotation_ch.bakta_gff3)
             .join(wrap_ch.polished_rewrapped)
 
-    AGT(agt_ch)
+    AGAT(agt_ch)
 
     emit:
     wrap_ch
