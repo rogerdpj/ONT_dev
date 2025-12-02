@@ -182,31 +182,31 @@ nextflow run main.nf --mode hybrid --genome_size_file barcode_info.csv --input '
 ### Usage and parameters
 
 ```bash
-usage: nextflow run main.nf [--help] [--mode VAR] [--genome_size_file VAR] [--input VAR] [--short_inputs VAR] [--outdir VAR] [--organism VAR] [--min_length VAR] [--min_mean_q VAR] [--keep_percent VAR] [--plasmid] [--bakta_db_define VAR] [--db_select VAR] [--abricate_db VAR] [-w VAR] [-profile VAR]
-
+Usage: nextflow run main.nf [--help] [--mode VAR] [--genome_size_file VAR] [--input VAR] [--short_inputs VAR] [--outdir VAR] [--organism VAR] [--min_length VAR] [--min_mean_q VAR] [--keep_percent VAR] [--plasmid] [--bakta_db_define VAR] [--db_select VAR] [--abricate_db VAR] [-w VAR] [-profile VAR]
+  
 Input data arguments
   --mode             TEXT        Selection of the pipeline assemble/hybrid [required]
   --input            PATH        Input barcode* folder(s) containing the long reads .fastq.gz files [required]
   --genome_size_file PATH        Path to the .csv file with barcode, size and sample name information [required]
   Pipeline specific
   --short_inputs     PATH        (--mode hybrid) Input FASTQ paired-end files named *_{1,2} (.fastq.gz format) [required]
-
+  
 Nextflow arguments
   -profile           TEXT        Selection of execution profile (docker, singularity or conda) [required]
   -w                 PATH        Path to the work dir. where temporary files will be written [default: ./work ]
-
+  
 Output arguments
   --outdir           PATH        Directory to write the output [default: ./out]
-
+  
 Optional arguments 
   --help                         Show this message and exit      
   --plasmid          BOOLEAN     Add this parameter to identify and type plasmid sequences in your assembly [default: false]
-
+  
 Long-read filtering arguments
   --min_length       INTEGER     Minimum length threshold (bp) [default: 1000]
   --min_mean_q       INTEGER     Minimum mean quality threshold [default: 10]
-  --keep_percent     INTEGER     Throw out the worst (100-x)% of read bases [default: 90]
-
+  --keep_percent     INTEGER     Throw out the worst (100-x)% of read bases [default: 90].
+  
 AMR arguments
   --organism         TEXT        By default, ABRicate searches the following databases: vfdb_full, resfinder, plasmidfinder, and card. If Escherichia coli or Klebsiella pneumoniae is specified, ecoli_vf and argannot will be searched, respectively, instead of vfdb_full [default: ""]. 
   

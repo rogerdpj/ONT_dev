@@ -1,5 +1,10 @@
 nextflow.enable.dsl = 2
 
+if (params.help) {
+    printHelp()
+    exit 0
+}
+
 checkInputParams()
 
 reference = file("${params.reference}")
@@ -42,6 +47,33 @@ workflow {
 ////////////////////////////////////////////////////////////////////////////////
 // FUNCTIONS                                                                  //
 ////////////////////////////////////////////////////////////////////////////////
+
+def printHelp() {
+    def readmeFile = file("${projectDir}/README.md")
+    def printSection = false
+
+    if (readmeFile.exists()) {
+        log.info "\n"
+        readmeFile.eachLine { line ->
+            // Start printing when we hit the Usage header
+            if (line.contains("Usage: nextflow run main.nf [--help] [--mode VAR] [--genome_size_file VAR] [--input VAR] [--short_inputs VAR] [--outdir VAR] [--organism VAR] [--min_length VAR] [--min_mean_q VAR] [--keep_percent VAR] [--plasmid] [--bakta_db_define VAR] [--db_select VAR] [--abricate_db VAR] [-w VAR] [-profile VAR]")) {
+                printSection = true
+            }
+            // Stop printing when we hit the next major header (Output)
+            if (line.contains("## Output")) {
+                printSection = false
+            }
+            
+            // Print the line if we are inside the section
+            if (printSection) {
+                log.info line
+            }
+        }
+        log.info "\n"
+    } else {
+        log.warn "README.md not found in ${projectDir}"
+    }
+}
 
 def checkInputParams() {
     // Check required parameters and display error messages
