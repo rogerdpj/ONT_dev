@@ -20,7 +20,6 @@
                  optimized for Oxford Nanopore and hybrid ONT–Illumina 
                  assemblies in clinical microbiology research.
   Version:       1.0.0
-  Contact:       your.email@example.com
 
     ============================================================
 */
