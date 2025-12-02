@@ -7,12 +7,13 @@ log.info """\
 
     WGS ONT - HYBRID ASSEMBLY
 
-            P A R A M E T R E S
+            P A R A M E T E R S
 ==============================================
 Configuration environemnt:
     ONT fastq directory:            $params.input
     Illumina fastq directory:       $params.short_inputs
     Out directory:                  $params.outdir
+    Plasmid analysis:               $params.plasmid
     Organism:                       $params.organism
 """
     .stripIndent()

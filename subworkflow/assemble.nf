@@ -5,12 +5,15 @@ nextflow.enable.dsl=2
 
 log.info """\
 
-WGS - P A R A M E T R E S
+    WGS ONT - ONT ASSEMBLY
+
+            P A R A M E T E R S
 ==============================================
 Configuration environemnt:
-    Out directory:             $params.outdir
     Fastq directory:           $params.input
-    Reference directory:       $params.reference
+    Out directory:             $params.outdir
+    Plasmid analysis:          $params.plasmid
+    Organism:                  $params.organism
 """
     .stripIndent()
 

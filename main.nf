@@ -1,3 +1,30 @@
+/*
+  ============================================================
+
+   ___  _   _ _____   ____    _    ____ _____ _____ ____  ___    _    _      
+  / _ \| \ | |_   _| | __ )  / \  / ___|_   _| ____|  _ \|_ _|  / \  | |     
+ | | | |  \| | | |   |  _ \ / _ \| |     | | |  _| | |_) || |  / _ \ | |     
+ | |_| | |\  | | |   | |_) / ___ \ |___  | | | |___|  _ < | | / ___ \| |___  
+  \___/|_| \_| |_|   |____/_/ __\_\____|_|_|_|_____|_| \_\___/_/   \_\_____| 
+       / \  | \ | |  / \  | | \ \ / / ___|_ _/ ___|                          
+      / _ \ |  \| | / _ \ | |  \ V /\___ \| |\___ \                          
+     / ___ \| |\  |/ ___ \| |___| |  ___) | | ___) |                         
+    /_/   \_\_| \_/_/   \_\_____|_| |____/___|____/
+    N F   P I P E L I N E - ONT_BACTERIAL_ANALYSIS
+
+  Oxford Nanopore (ONT) Sequencing Pipeline - Nextflow
+  ============================================================
+
+  Author:        Jimmy Lucas and Roger de Pedro Jové
+  Description:   A scalable Nextflow pipeline for automated WGS analysis, 
+                 optimized for Oxford Nanopore and hybrid ONT–Illumina 
+                 assemblies in clinical microbiology research.
+  Version:       1.0.0
+  Contact:       your.email@example.com
+
+    ============================================================
+*/
+
 nextflow.enable.dsl = 2
 
 if (params.help) {
@@ -11,12 +38,23 @@ reference = file("${params.reference}")
 
 log.info """\
 
-WGS ONT - N F   P I P E L I N E 
+   ___  _   _ _____   ____    _    ____ _____ _____ ____  ___    _    _      
+  / _ \\| \\ | |_   _| | __ )  / \\  / ___|_   _| ____|  _ \\|_ _|  / \\  | |     
+ | | | |  \\| | | |   |  _ \\ / _ \\| |     | | | _|  | |_) || |  / _ \\ | |     
+ | |_| | |\\  | | |   | |_) / ___ \\ |___  | | | |___|  _ < | | / ___ \\| |___  
+  \\___/|_| \\_| |_|   |____/_/ __\\_\\____|_|_|_|_____|_| \\_\\___/_/   \\_\\_____| 
+       / \\  | \\ | |  / \\  | | \\ \\ / / ___|_ _/ ___|                          
+      / _ \\ |  \\| | / _ \\ | |  \\ V /\\___ \\| |\\___ \\                          
+     / ___ \\| |\\  |/ ___ \\| |___| |  ___) | | ___) |                         
+    /_/   \\_\\_| \\_/_/   \\_\\_____|_| |____/___|____/
+
+
+N F   P I P E L I N E - ONT_BACTERIAL_ANALYSIS 
 ==============================================
 Configuration environment:
+    Pipeline mode:             $params.mode
     Genome size file:          $params.genome_size_file
-    Mode:                      $params.mode
-    profile:                   $workflow.profile
+    Profile:                   $workflow.profile
 """
     .stripIndent()
 
