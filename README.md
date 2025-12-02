@@ -219,64 +219,66 @@ Databases arguments
 ## Output
 This is the forder architecture and the content of the output data directory:
 
-<center>
-        <table>
-            <thead>
-                <tr>
-                    <th align= "center"><nobr> Folder </th>
-                    <th align= "center"><nobr> Subfolder </th>
-                    <th align= "center"><nobr> Description </th>
-                </tr>
-            </thead>
-            <t/body>
-                <tr>
-                    <td rowspan="2" align="center"><nobr>1-QC </td>
-                    <td align="center"><nobr>data_QC </td>
-                    <td align="center">Individual initial Nanoplot results folders and Nanocomp summary of all reports before and after trimming</td>
-                </tr>
-                <tr>
-                    <td align="center"><nobr>genome_QC </td>
-                    <td align="center">Individual BUSCO and QUAST reports folders and multiQC combined report of all samples</td>
-                </tr>
-                <tr>
-                    <td rowspan="4" align= "center"><nobr> 2-Assemby </td>
-                    <td align= "center">  </td>
-                    <td align= "center"> All final consensus genomes assemblies ("sample_ID"_consensus_wrapped.fasta)  </td>
-                </tr>
-                <tr>
-                    <td align= "center"><nobr> 1-Fly_structural </td>
-                    <td align= "center"> Nanostats results and Flye output results directories containing the graph files  </td>
-                </tr>
-                <tr>
-                    <td align= "center"><nobr> 2-Medaka_results </td>
-                    <td align= "center"> Medaka output directories </td>
-                </tr>
-                <tr>
-                    <td align= "center"><nobr> 3-Annotations </td>
-                    <td align= "center"> All combined files produced by AGAT from Bakta and Prokka annotation tools are located here. Also, Bakta and Prokka output directories </td>
-                </tr>
-                <tr>
-                    <td rowspan="2" align= "center"><nobr> 3-AMR </td>
-                    <td align="center"> ABRICATE </td>
-                    <td align="center">	ABRICATE search results </td>
-                </tr>
-                                <tr>
-                    <td align= "center"> AMRFinder </td>
-                    <td align= "center"> AMRFinder search results </td>
-                </tr>
-                <tr>
-                    <td rowspan="1" align= "center"><nobr> 4-MLST </td>
-                    <td align="center">  </td>
-                    <td align="center">	MLST results </td>
-                </tr>
-                <tr>
-                    <td rowspan="1" align= "center"><nobr> 5-Plasmids </td>
-                    <td align= "center"> </td>
-                    <td align ="center"> MOB-suite plasmid tool output directories  </td>
-                </tr>
-            <t/body>
-        </table>
-        </center>
+<div style="overflow-x: auto;">
+
+<table>
+    <thead>
+        <tr>
+            <th align="center">Folder</th>
+            <th align="center">Subfolder</th>
+            <th align="center">Description</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td rowspan="2" align="center"><nobr>1-QC</td>
+            <td align="center"><nobr>data_QC</td>
+            <td align="center">Individual initial Nanoplot results folders and Nanocomp summary of all reports before and after trimming</td>
+        </tr>
+        <tr>
+            <td align="center"><nobr>genome_QC</td>
+            <td align="center">Individual BUSCO and QUAST reports folders and MultiQC combined report of all samples</td>
+        </tr>
+        <tr>
+            <td rowspan="4" align="center"><nobr>2-Assembly</td>
+            <td align="center"></td>
+            <td align="center">All final consensus genomes assemblies ("sample_ID"_consensus_wrapped.fasta)</td>
+        </tr>
+        <tr>
+            <td align="center"><nobr>1-Fly_structural</td>
+            <td align="center">Nanostats results and Flye output results directories containing the graph files</td>
+        </tr>
+        <tr>
+            <td align="center"><nobr>2-Medaka_results</td>
+            <td align="center">Medaka output directories</td>
+        </tr>
+        <tr>
+            <td align="center"><nobr>3-Annotations</td>
+            <td align="center">All combined files produced by AGAT from Bakta and Prokka annotation tools are located here. Also, Bakta and Prokka output directories</td>
+        </tr>
+        <tr>
+            <td rowspan="2" align="center"><nobr>3-AMR</td>
+            <td align="center">ABRICATE</td>
+            <td align="center">ABRICATE search results</td>
+        </tr>
+        <tr>
+            <td align="center">AMRFinder</td>
+            <td align="center">AMRFinder search results</td>
+        </tr>
+        <tr>
+            <td align="center"><nobr>4-MLST</td>
+            <td align="center"></td>
+            <td align="center">MLST results</td>
+        </tr>
+        <tr>
+            <td align="center"><nobr>5-Plasmids</td>
+            <td align="center"></td>
+            <td align="center">MOB-suite plasmid tool output directories</td>
+        </tr>
+    </tbody>
+</table>
+
+</div>
 
 
 ## References
