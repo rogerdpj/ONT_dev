@@ -176,20 +176,20 @@ nextflow run main.nf --mode assemble --genome_size_file barcode_info.csv --input
 
 *HYBRID*
 ```
-nextflow run main.nf --mode hybrid --genome_size_file barcode_info.csv --input '/path/to/data/barcode*' --short_inputs '/path/to/data/*_{1,2}.fastq.gz' -profile <docker/singularity/conda>
+nextflow run main.nf --mode hybrid --genome_size_file barcode_info.csv --input '/path/to/data/barcode*' --short_reads '/path/to/data/*_{1,2}.fastq.gz' -profile <docker/singularity/conda>
 ```
 
 ### Usage and parameters
 
 ```bash
-Usage: nextflow run main.nf [--help] [--mode VAR] [--genome_size_file VAR] [--input VAR] [--short_inputs VAR] [--outdir VAR] [--organism VAR] [--min_length VAR] [--min_mean_q VAR] [--keep_percent VAR] [--plasmid] [--bakta_db_define VAR] [--db_select VAR] [--abricate_db VAR] [-w VAR] [-profile VAR]
+Usage: nextflow run main.nf [--help] [--mode VAR] [--genome_size_file VAR] [--input VAR] [--short_reads VAR] [--outdir VAR] [--organism VAR] [--min_length VAR] [--min_mean_q VAR] [--keep_percent VAR] [--plasmid] [--bakta_db_define VAR] [--db_select VAR] [--abricate_db VAR] [-w VAR] [-profile VAR]
   
 Input data arguments
   --mode             TEXT        Selection of the pipeline assemble/hybrid [required]
   --input            PATH        Input barcode* folder(s) containing the long reads .fastq.gz files [required]
   --genome_size_file PATH        Path to the .csv file with barcode, size and sample name information [required]
   Pipeline specific
-  --short_inputs     PATH        (--mode hybrid) Input FASTQ paired-end files named *_{1,2} (.fastq.gz format) [required]
+  --short_reads     PATH        (--mode hybrid) Input FASTQ paired-end files named *_{1,2} (.fastq.gz format) [required]
   
 Nextflow arguments
   -profile           TEXT        Selection of execution profile (docker, singularity or conda) [required]

@@ -11,7 +11,7 @@ log.info """\
 ==============================================
 Configuration environemnt:
     ONT fastq directory:            $params.input
-    Illumina fastq directory:       $params.short_inputs
+    Illumina fastq directory:       $params.short_reads
     Out directory:                  $params.outdir
     Plasmid analysis:               $params.plasmid
     Organism:                       $params.organism
@@ -229,7 +229,7 @@ workflow post_analysis {
 
     main:
     // Canal de lecturas
-    read_ch = Channel.fromFilePairs(params.short_inputs, size: 2)
+    read_ch = Channel.fromFilePairs(params.short_reads, size: 2)
    
     fastqc_ch_original= FASTQC_QUALITY_ORIGINAL(read_ch.map{it -> it[1]})
 

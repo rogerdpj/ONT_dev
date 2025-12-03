@@ -128,8 +128,8 @@ def checkInputParams() {
         log.warn("You need to provide a valid mode with --mode (assemble, hybrid)")
         fatal_error = true
     }
-    if( params.mode == 'hybrid' && !params.short_reads ) {
-        log.warn "You need to provide a valid short read data with --short_reads when using hybrid mode"
+    if( params.mode == 'hybrid' && !params.short_inputs ) {
+        log.warn "You need to provide a valid short read data with --short_inputs when using hybrid mode"
         fatal_error = true
     }
     if( !['docker','singularity','conda'].contains( workflow.profile ) ) {
