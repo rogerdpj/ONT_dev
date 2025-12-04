@@ -16,7 +16,6 @@ RUN micromamba create -y -n autocycler -c conda-forge -c bioconda \
       fastp=1.0.1 libdeflate=1.23 dnaapler myloasm && \
     micromamba clean --all --yes
 
-
 # Install latest plassembler from PyPI (not Bioconda!)
 RUN micromamba run -n autocycler pip install plassembler
 
@@ -30,12 +29,15 @@ ENV PATH="/opt/conda/envs/autocycler/bin:$PATH"
 ENV PLASSEMBLER_DB="/opt/conda/envs/autocycler/plassembler_db"
 ENV TERM=xterm-256color
 
+# Autocycler version to install
+ENV AUTO_CYCLER_VERSION=0.5.2
 
 # Download and install latest release of Autocycler
-RUN curl -L -o autocycler.tar.gz $(curl -s https://api.github.com/repos/rrwick/Autocycler/releases/latest | grep "browser_download_url.*linux-x86_64-musl.*tar.gz" | cut -d '"' -f 4) && \
+RUN curl -L -o autocycler.tar.gz \
+      https://github.com/rrwick/Autocycler/releases/download/v${AUTO_CYCLER_VERSION}/autocycler-linux-x86_64-gnu-v${AUTO_CYCLER_VERSION}.tar.gz && \
     tar -xzf autocycler.tar.gz && \
     mv autocycler /opt/conda/envs/autocycler/bin/ && \
     rm autocycler.tar.gz
     
 # Default command
-CMD ["/bin/sh", "-c", "autocycler --help; echo \"\nInstalled tools:\"; cat /tmp/installed_tools.txt; echo \"\nMissing tools:\"; cat /tmp/missing_tools.txt; echo"]
+CMD ["/bin/sh", "-c", "autocycler --help"]
