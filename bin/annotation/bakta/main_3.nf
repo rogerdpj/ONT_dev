@@ -37,6 +37,7 @@ process BAKTA {
     bakta --db ${db_directory}/db-light \
           --threads ${task.cpus} \
           --keep-contig-headers \
+          --skip-plot \
           --prefix ${sample_code}_consensus_wrapped \
           --output \${OUTPUT_DIR} \
           ${assembly_file}
