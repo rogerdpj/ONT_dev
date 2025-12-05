@@ -27,12 +27,6 @@ include { KRAKEN_ONT;SEQTK_PRUNE                      }     from '../bin/kraken/
 include { BAKTA_SET_DB                                }     from '../bin/annotation/bakta/db_set'
 include { AUTOCYCLER                                  }     from '../bin/assemble/autocycler/main'
 include { DNAAPLER                                    }     from '../bin/assemble/autocycler/dnaapler'
-    /*
-include { MSA                                         }     from '../bin/assemble/trycycler/msa'
-include { PARTITION                                   }     from '../bin/assemble/trycycler/partition'
-include { CONSENSUS                                   }     from '../bin/assemble/trycycler/consensus'
-include { MOB_SUITE                                   }     from '../bin/plasmid/mob/main'
-*/
 include { FASTQC_QUALITY as FASTQC_QUALITY_ORIGINAL   }     from '../bin/qc/fastqc/main'
 include { TRIMMING as SHORT_TRIMMING                  }     from '../bin/trimming/short_trimming'
 include { FASTQC_QUALITY as FASTQC_QUALITY_FINAL      }     from '../bin/qc/fastqc/main'
@@ -46,33 +40,8 @@ include { AMR                                         }     from '../bin/AMR/abr
 include { AMR_2                                       }     from '../bin/AMR/resfinder/main'
 include { PROKKA                                      }     from '../bin/annotation/prokka/main'
 include { BAKTA                                       }     from '../bin/annotation/bakta/main_3'
-include { AGAT                                         }     from '../bin/annotation/main'
+include { AGAT                                        }     from '../bin/annotation/main'
 include { PLASMID_SEARCH                              }     from '../bin/plasmid/main'
-
-/*
-
-
-include { POLISHING_1                                 }     from '../bin/assemble/main'
-include { CONSENSUM                                   }     from '../bin/assemble/main'
-include { POLISHING_2                                 }     from '../bin/assemble/main'
-include { QUAST                                       }     from '../bin/qc/quast/main'
-include { PROKKA                                      }     from '../bin/anotations/prokka/main'
-include { BAKTA                                       }     from '../bin/anotations/bakta/main'
-include { BUILD_INDEX_1                               }     from '../bin/bowtie/index/main_bwa'
-include { BUILD_INDEX as PERSONAL_GENOME_INDEX        }     from '../bin/bowtie/index/main'
-include { PERSONAL_GENOME_MAPPING                     }     from '../bin/bowtie/mapping/main'
-include { MARKDUPLICATE                               }     from '../bin/gatk/picard/markduplicate/main'
-include { ADDORREPLACE                                }     from '../bin/gatk/picard/addorreplace/main'
-include { HAPLOTYPECALLER                             }     from '../bin/gatk/haplotype/main'
-include { GENOTYPE as GENOTYPE_ANALYSIS               }     from '../bin/gatk/genotype/main'
-include { ALIGN as NORMALICE_WILDTYPE                 }     from '../bin/gatk/Filter/align'
-include { FILTER_VARIANTS as FILTER_VARIANTS_PARAM    }     from '../bin/gatk/Filter/main'
-include { DECOMPRESS_VCF                              }     from '../bin/snpeff/main_2'
-include { SNPEFF                                      }     from '../bin/snpeff/main'
-include { AMR as POST_ANALYSIS_ABRICATE               }     from '../bin/AMR/abricate/main'
-include { AMR_2 as POST_ANALYSIS_AMRFINDER            }     from '../bin/AMR/AMRFinder/main'
-*/
-
 
 
 
@@ -130,7 +99,6 @@ workflow pre_process {
     
 
     emit:
-    trimming_files_ch
     prune_reads_ch
     
 }
@@ -157,63 +125,6 @@ workflow assamble_process {
 
     dnaapler_all_ch = DNAAPLER(autocycler_ch.final_gfa)
     dnaapler_ch = dnaapler_all_ch.reoriented_assembly
-
-
-/*    
-    auticycler_ch = SUB_SAMPLE(trimming_files_ch, genome_size_map)
-    collect_subsample_ch = COMBINE_SUBSAMPLED_READS(subsample_trycycler_ch)
-
-    genome_size_ch = Channel
-                        .fromPath(params.genome_size_file)
-                        .splitCsv(header: true)
-                        .map { row -> tuple(row.barcode, row.genome_size as int, row.sample_code) }
-
-    
-    reads_with_size_ch = collect_subsample_ch.join(genome_size_ch)
-    .map { barcode_id, barcode_file, genome_size, sample_code ->
-        tuple(barcode_id, barcode_file, genome_size, sample_code)
-    }
-
-    reads_with_size_ch.view()
-
-    //Canu assemble
-    sub_sample_1_canu_ch = SUB_SAMPLE_1(reads_with_size_ch)
-        
-    //Fly assemble
-    sub_sample_2_fly_ch = SUB_SAMPLE_2(reads_with_size_ch)
-
-    //Raven assemble
-    sub_sample_3_raven_ch = SUB_SAMPLE_3(reads_with_size_ch)
-
-
-    reads_for_try_ch = reads_with_size_ch.map { barcode_id, barcodefile, genome_size, sample_code -> 
-    tuple(sample_code, barcode_id, barcodefile, genome_size)}
-
-    
-    trycyler_input_ch = reads_for_try_ch
-        .join(sub_sample_1_canu_ch.assembly_canu_file)
-        .join(sub_sample_2_fly_ch.fly_assambly_tuple)
-        .join(sub_sample_3_raven_ch.raven_aseembly_file)
-
-    trycyler_input_ch.view()
-    
-    trycycler_ch = MERGE_ASSEMBLE(trycyler_input_ch)
-
-    merge_cluster001_ch = trycycler_ch.chrom_clusters.map { sample_code, barcode_id, cluster_dir ->
-        def cluster001_path = cluster_dir.resolve('cluster_001')
-        tuple(sample_code, barcode_id, cluster001_path)
-    }
-
-    reconcile_ch = RECONCILE_ASSEMBLE(merge_cluster001_ch, reads_for_try_ch)
-    
-    msa_ch = MSA(reconcile_ch.reconciled_dir)
-
-    partition_ch = PARTITION(msa_ch.msa_dir, trimming_files_ch)
-
-    consensus_ch = CONSENSUS(partition_ch.partition_dir)
-
-    plasmid_process_ch = MOB_SUITE(trycycler_ch.plasmid_clusters)
-*/
 
     emit:
     dnaapler_ch
