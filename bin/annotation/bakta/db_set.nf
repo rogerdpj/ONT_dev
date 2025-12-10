@@ -26,10 +26,5 @@ process BAKTA_SET_DB {
     # Download db light
     bakta_db download --type light --output db-light
     
-    # update of AMRFinderPlus
-    amrfinder_update --database db-light/amrfinderplus-db --force_update
-
-    chmod -R a+rX db-light || true
-
     """
 }
