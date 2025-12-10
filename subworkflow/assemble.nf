@@ -51,8 +51,10 @@ workflow assemble {
 }
 
 workflow workflow_kraken_process {
+    //KRAKEN2_DB SETTING
     db_ready_ch = PREPARE_KRAKEN_DB()
     DB_CH= db_ready_ch.db_ready
+    //BAKTA DB SETTING
     db_bakta_ready_ch = BAKTA_SET_DB()
     DB_BAKTA_CH = db_bakta_ready_ch.db_bakta_dir
 
