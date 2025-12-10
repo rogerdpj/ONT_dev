@@ -8,13 +8,10 @@ process BAKTA_SET_DB {
     }
 
     output:
-    path("${params.bakta_db_dir}/db-light"), emit: db_bakta_dir
+    path("db-light/db-light"), emit: db_bakta_dir
 
     script:
     """
-    mkdir -p ${params.bakta_db_dir}
-    cd ${params.bakta_db_dir}
-
     export HOME=\$PWD
     
     if [ -d "db-light" ]; then
