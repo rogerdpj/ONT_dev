@@ -39,7 +39,8 @@ process BAKTA_SET_DB {
 
 
     rm -rf db-light
-    ln -s ${params.bakta_db_dir}/db-light db-light
+    mkdir -p db-light
+    cp -R "\${DB_ROOT}" db-light/
 
 
     if [ ! -f "db-light/db-light/\${DB_MARKER}" ]; then
