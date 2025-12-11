@@ -40,7 +40,7 @@ include { AMR                                         }     from '../bin/AMR/abr
 include { AMR_2                                       }     from '../bin/AMR/resfinder/main'
 include { PROKKA                                      }     from '../bin/annotation/prokka/main'
 include { BAKTA                                       }     from '../bin/annotation/bakta/main_3'
-include { AGAT                                        }     from '../bin/annotation/main'
+include { AGAT                                        }     from '../bin/annotation/main_2'
 include { PLASMID_SEARCH                              }     from '../bin/plasmid/main'
 
 
