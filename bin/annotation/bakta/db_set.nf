@@ -12,32 +12,39 @@ process BAKTA_SET_DB {
 
     script:
     """
-    mkdir -p ${params.bakta_db_dir}
-    cd ${params.bakta_db_dir}
-
     export HOME=\$PWD
+    DB_ROOT="${params.bakta_db_dir}/db-light/db-light"
+    DB_MARKER="version.json"   # fichero que sabemos que está en una DB completa
 
-    # Si ya está descargada, no hacemos nada
-    if [ -f "db-light/db-light/bakta.db" ]; then
-        echo "[BAKTA_SET_DB] Usando BD existente en \$(pwd)/db-light/db-light"
-        exit 0
+    if [ ! -f "\${DB_ROOT}/\${DB_MARKER}" ]; then
+        echo "[BAKTA_SET_DB] Descargando BD en ${params.bakta_db_dir}/db-light ..."
+
+        set +e
+        bakta_db download --type light --output ${params.bakta_db_dir}/db-light
+        EXIT=\$?
+        set -e
+
+        # Si bakta_db falló pero la DB parece completa (version.json existe), asumimos fallo solo de AMRFinderPlus
+        if [ \$EXIT -ne 0 ]; then
+            if [ -f "\${DB_ROOT}/\${DB_MARKER}" ]; then
+                >&2 echo "[BAKTA_SET_DB] WARNING: bakta_db salió con código \$EXIT; asumo fallo de AMRFinderPlus pero la BD de Bakta está OK."
+            else
+                >&2 echo "[BAKTA_SET_DB] ERROR: bakta_db falló (código \$EXIT) y no hay \${DB_MARKER}; aborto."
+                exit \$EXIT
+            fi
+        fi
+    else
+        echo "[BAKTA_SET_DB] Usando BD existente en \${DB_ROOT}"
     fi
 
-    # Descarga + intento de update de AMRFinderPlus
-    set +e
-    bakta_db download --type light --output db-light
-    EXIT=\$?
-    set -e
 
-    # Si bakta_db falla pero bakta.db existe, asumimos que sólo ha caído amrfinder_update
-    if [ \$EXIT -ne 0 ]; then
-        if [ -f "db-light/db-light/bakta.db" ]; then
-            >&2 echo "[BAKTA_SET_DB] WARNING: bakta_db salió con código \$EXIT; asumo fallo de AMRFinderPlus pero la BD de Bakta está OK."
-            exit 0
-        else
-            >&2 echo "[BAKTA_SET_DB] ERROR: bakta_db falló (código \$EXIT) y no hay bakta.db; aborto."
-            exit \$EXIT
-        fi
+    rm -rf db-light
+    ln -s ${params.bakta_db_dir}/db-light db-light
+
+
+    if [ ! -f "db-light/db-light/\${DB_MARKER}" ]; then
+        >&2 echo "[BAKTA_SET_DB] ERROR: No encuentro \${DB_MARKER} en db-light/db-light"
+        exit 1
     fi
     """
 }
