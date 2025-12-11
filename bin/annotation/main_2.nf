@@ -9,68 +9,68 @@ process AGAT {
     publishDir "${params.outdir}/2-Assembly/3-Annotations/AGT_${sample_code}", mode: 'copy'
     
     input:
-    path prokka_file
-    path bakta_file
-    tuple val(sample_code), path(assembly_file)
+    tuple val(sample_code), path(prokka_file), path(bakta_file), path(assembly_file)
 
     output:
-    path "fixed_combined_${sample_code}.gff3", emit: combine_gff3
+    path "final_${sample_code}.gff3", emit: combine_gff3
     path "statistics_report_${sample_code}.txt", emit: statistics_report
     path "cds_${sample_code}.fa", emit: cds_fasta
     path "protein_${sample_code}.fa", emit: protein_fasta
+    path "validation_report_${sample_code}.txt", emit: validation_report, optional: true
 
     script:
     """
-    echo "Limpiando headers del FASTA con IDs únicos..."
-    awk '/^>/{print ">contig_" ++i; next} {print}' ${assembly_file} > assembly_clean.fasta
+    set -euo pipefail
 
-    # Convertir GFF de Prokka a formato GFF3 válido
+    echo "Usando FASTA original: ${assembly_file}" > validation_report_${sample_code}.txt
+
+    # 1) Convertir GFF de Prokka a formato GFF3 válido
+    echo "Convirtiendo Prokka GFF a GFF3..." >> validation_report_${sample_code}.txt
     agat_convert_sp_gxf2gxf.pl --gff ${prokka_file} --output prokka_${sample_code}.gff3
 
-    # Extraer contig IDs originales y nuevos
-    grep "^>" ${assembly_file} | sed 's/^>//; s/ .*//' > prokka_contigs.txt
-    grep "^>" assembly_clean.fasta | sed 's/^>//' > bakta_contigs.txt
+    # 2) Fusionar Prokka + Bakta
+    echo "Fusionando anotaciones Prokka + Bakta..." >> validation_report_${sample_code}.txt
+    agat_sp_merge_annotations.pl \
+        --gff prokka_${sample_code}.gff3 \
+        --gff ${bakta_file} \
+        --out combined_${sample_code}.gff3
 
-    # Validar tamaños iguales
-    wc -l prokka_contigs.txt
-    wc -l bakta_contigs.txt
+    # 3) Corregir fases de codón
+    echo "Corrigiendo fases de CDS..." >> validation_report_${sample_code}.txt
+    agat_sp_fix_cds_phases.pl \
+        --gff combined_${sample_code}.gff3 \
+        --fasta ${assembly_file} \
+        --output fixed_combined_${sample_code}.gff3
 
-    # Mapeo 1:1 suponiendo orden igual
-    paste prokka_contigs.txt bakta_contigs.txt > contig_name_map.tsv
+    # 4) Conservar isoforma más larga
+    echo "Conservando isoforma más larga..." >> validation_report_${sample_code}.txt
+    agat_sp_keep_longest_isoform.pl \
+        --gff fixed_combined_${sample_code}.gff3 \
+        --output longest_${sample_code}.gff3
 
-    # Renombrar contigs en Prokka
-    agat_sq_rename_seqid.pl --gff prokka_${sample_code}.gff3 --tsv contig_name_map.tsv --output prokka_${sample_code}_renamed.gff3
+    # 5) Filtrar genes incompletos
+    echo "Filtrando genes incompletos..." >> validation_report_${sample_code}.txt
+    agat_sp_filter_incomplete_gene_coding_models.pl \
+        --gff longest_${sample_code}.gff3 \
+        --fasta ${assembly_file} \
+        --output filtered_${sample_code}.gff3
 
-    # Fusionar Prokka + Bakta
-    agat_sp_merge_annotations.pl --gff prokka_${sample_code}_renamed.gff3 --gff ${bakta_file} --out combined_${sample_code}.gff3
+    # 6) Definir GFF final (por claridad)
+    cp filtered_${sample_code}.gff3 final_${sample_code}.gff3
 
-    # Corregir fases de codón
-    agat_sp_fix_cds_phases.pl --gff combined_${sample_code}.gff3 --fasta assembly_clean.fasta --output fixed_combined_${sample_code}.gff3
+    # 7) Extraer CDS y proteínas
+    echo "Extrayendo secuencias CDS y proteínas..." >> validation_report_${sample_code}.txt
+    gffread final_${sample_code}.gff3 \
+        -g ${assembly_file} \
+        -x cds_${sample_code}.fa \
+        -y protein_${sample_code}.fa
 
-    # Conservar isoforma más larga
-    agat_sp_keep_longest_isoform.pl --gff fixed_combined_${sample_code}.gff3 --output longest_${sample_code}.gff3
+    # 8) Estadísticas de anotación
+    echo "Generando estadísticas..." >> validation_report_${sample_code}.txt
+    agat_sp_statistics.pl \
+        --gff final_${sample_code}.gff3 \
+        --output statistics_report_${sample_code}.txt
 
-    # Filtrar genes incompletos
-    agat_sp_filter_incomplete_gene_coding_models.pl --gff longest_${sample_code}.gff3 --fasta assembly_clean.fasta --output filtered_${sample_code}.gff3
-
-    # Validar consistencia de contig IDs
-    grep "^>" assembly_clean.fasta | sed 's/^>//' | sort > ids_fasta.txt
-    awk '\$0 !~ /^#/ {print \$1}' filtered_${sample_code}.gff3 | sort | uniq > ids_gff.txt
-    comm -23 ids_gff.txt ids_fasta.txt > mismatched_ids.txt || true
-
-    # Renombrar si hay incompatibilidades
-    if [ -s mismatched_ids.txt ]; then
-        echo "Hay contigs con nombres incompatibles, ajustando..."
-        cut -f2,1 contig_name_map.tsv > map_for_final.tsv
-        agat_sq_rename_seqid.pl --gff filtered_${sample_code}.gff3 --tsv map_for_final.tsv --output final_${sample_code}.gff3
-    else
-        cp filtered_${sample_code}.gff3 final_${sample_code}.gff3
-    fi
-
-    # Extraer CDS y proteínas
-    gffread final_${sample_code}.gff3 -g assembly_clean.fasta -x cds_${sample_code}.fa -y protein_${sample_code}.fa
-
-    # Estadísticas de anotación
-    agat_sp_statistics.pl --gff final_${sample_code}.gff3 --output statistics_report_${sample_code}.txt
+    echo "Proceso completado exitosamente." >> validation_report_${sample_code}.txt
     """
 }
