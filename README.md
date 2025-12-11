@@ -149,6 +149,7 @@ export NFX_SINGULARITY_CACHEDIR=/mnt/dades/singularity/tmp
 
 export APPTAINER_TMPDIR=/mnt/dades/singularity/tmp
 export APPTAINER_CACHEDIR=/mnt/dades/singularity/cache
+export NXF_SINGULARITY_CACHEDIR=/mnt/dades/singularity/cache
 export APPTAINERENV_NXF_TASK_WORKDIR=/mnt/dades/singularity/tmp
 export APPTAINERENV_TMPDIR=/mnt/dades/singularity/tmp
 ```
