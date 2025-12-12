@@ -34,3 +34,6 @@ data/out*
 .nfs*
 DVT_trace.txt
 .vscode/
+bakta_db/
+kraken2-db/
+singularity_cache/
