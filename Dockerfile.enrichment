@@ -1,0 +1,22 @@
+FROM continuumio/miniconda3:latest
+
+LABEL maintainer="jimmy_12222@hotmail.com"
+LABEL description="Herramientas para enriquecimiento de anotación (gffread + samtools)"
+
+SHELL ["/bin/bash", "-c"]
+
+# Instalamos solo gffread y samtools (que son ligeros y están en bioconda)
+RUN conda config --add channels defaults && \
+    conda config --add channels bioconda && \
+    conda config --add channels conda-forge && \
+    conda create -y -n bio_env \
+        gffread \
+        samtools \
+        && \
+    conda clean -afy
+
+# Configurar el PATH para que gffread sea visible
+ENV PATH=/opt/conda/envs/bio_env/bin:$PATH
+
+WORKDIR /data
+CMD [ "bash" ]
