@@ -10,6 +10,8 @@
 ## Introduction
 This Nextflow pipeline provides an automated, reproducible and scalable solution for whole-genome sequencing (WGS) analysis in clinical microbiology research optimised for **Oxford Nanopore Technology (ONT)** data. It also supports **Illumina** data for *the novo* hybrid assemblies.
 
+![Current pipeline of the project](PipelineONT_V1.0.png)
+
 ## Contents
 - [Pipeline summary](#pipeline-summary)
     - [Assemble](#mode---assemble)
@@ -107,7 +109,7 @@ After the **consensus genome assemblies** have been generated, all assemblies ar
 
 3. **Assembly and genome QC**:  Structural quality metrics are evaluated with [QUAST](https://quast.sourceforge.net/), and genome completeness is assessed using [BUSCO](https://busco.ezlab.org/). A final combined report is generated with [MultiQC](https://github.com/MultiQC/MultiQC).
 
-4. **Annotation**: Genome annotation is performed using both [Prokka](https://github.com/tseemann/prokka) and [Bakta](https://github.com/oschwengers/bakta). The resulting GFF annotation files from both annotation tools are cleaned and combined using [AGAT](https://github.com/NBISweden/AGAT).
+4. **Annotation**: Genome annotation is performed using both [Prokka](https://github.com/tseemann/prokka) and [Bakta](https://github.com/oschwengers/bakta). Combined annotation files are provided.
 
 4. **Post-assembly analyses**:
     * Mass screening of contigs for antimicrobial resistance and virulence genes using [ABRIcate](https://github.com/tseemann/abricate).
@@ -139,19 +141,6 @@ SINGULARITY_TMPDIR=/PATH/singularity/tmp
 SINGULARITY_CACHEDIR=/PATH/singularity/cache
 TMPDIR=/PATH/singularity/tmp
 export NFX_SINGULARITY_CACHEDIR =/PATH/singularity/tmp
-```
-e.g:
-```
-SINGULARITY_TMPDIR=/mnt/dades/singularity/tmp
-SINGULARITY_CACHEDIR=/mnt/dades/singularity/tmp
-TMPDIR=/mnt/dades/singularity/tmp
-export NFX_SINGULARITY_CACHEDIR=/mnt/dades/singularity/tmp
-
-export APPTAINER_TMPDIR=/mnt/dades/singularity/tmp
-export APPTAINER_CACHEDIR=/mnt/dades/singularity/cache
-export NXF_SINGULARITY_CACHEDIR=/mnt/dades/singularity/cache
-export APPTAINERENV_NXF_TASK_WORKDIR=/mnt/dades/singularity/tmp
-export APPTAINERENV_TMPDIR=/mnt/dades/singularity/tmp
 ```
 >[!NOTE]
 Conda environments are listed and created but have not been tested.
