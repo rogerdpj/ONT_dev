@@ -23,10 +23,10 @@ include { QC                                            }     from '../bin/qc/ma
 include { TRIMMING                                      }     from '../bin/trimming/main'
 include { KRAKEN_ONT;SEQTK_PRUNE                        }     from '../bin/kraken/main'
 include { NANOCOMP                                      }     from '../bin/qc/nanocomp/main'
-include { SUB_SAMPLE_2 as ASSEMBLE                      }     from '../bin/assemble/fly/main'
+include { SUB_SAMPLE_2 as ASSEMBLY                      }     from '../bin/assembly/fly/main'
 include { POLISHING_ROUND                               }     from '../bin/polishing/main'
-include { MEDAKA                                        }     from '../bin/assemble/medaka/main'
-include { DNAAPLER                                      }     from '../bin/polishing/dnaapler_assemble'
+include { MEDAKA                                        }     from '../bin/assembly/medaka/main'
+include { DNAAPLER                                      }     from '../bin/polishing/dnaapler_assembly'
 include { WRAP                                          }     from '../bin/polishing/wrap_2'
 include { PROKKA                                        }     from '../bin/annotation/prokka/main'
 include { BAKTA                                         }     from '../bin/annotation/bakta/main_3'
@@ -40,7 +40,7 @@ include { MLST                                          }     from '../bin/mlst/
 include { BAKTA_SET_DB                                  }     from '../bin/annotation/bakta/db_set'
 include { PLASMID_SEARCH                                }     from '../bin/plasmid/main'
 
-workflow assemble {
+workflow assembly {
     krakenprocess_output = workflow_kraken_process()
     preprocess_output = pre_process(krakenprocess_output.DB_CH)
     assambleprocess_output = assamble_process(preprocess_output.prune_reads_ch, krakenprocess_output.DB_BAKTA_CH)
@@ -117,7 +117,7 @@ workflow assamble_process {
             tuple(barcode_id, barcode_file, genome_size, sample_code)
         }
 
-    fly_ch = ASSEMBLE(reads_with_size_ch)
+    fly_ch = ASSEMBLY(reads_with_size_ch)
 
 //POLISHING PROCESS
 //Porcesar el emit del assembly en fly para determinar numeros de polishing
@@ -157,9 +157,9 @@ coverage_ch = fly_ch.info_cov
    
     medaka_consensum_ch= MEDAKA(medaka_ch)
 
-    consensum_file_ch = medaka_consensum_ch.assemble_medaka
+    consensum_file_ch = medaka_consensum_ch.assembly_medaka
 
-    dna_apler_ch = DNAAPLER(medaka_consensum_ch.assemble_medaka)
+    dna_apler_ch = DNAAPLER(medaka_consensum_ch.assembly_medaka)
 
     wrap_ch = WRAP(dna_apler_ch.reoriented_assembly)
 
@@ -173,9 +173,9 @@ coverage_ch = fly_ch.info_cov
 
     ENRICHMENT_ANNOTATION(agt_ch)
 
-    busco_ch = BUSCO(medaka_consensum_ch.assemble_medaka)
+    busco_ch = BUSCO(medaka_consensum_ch.assembly_medaka)
     
-    quast_ch = QUAST(medaka_consensum_ch.assemble_medaka)
+    quast_ch = QUAST(medaka_consensum_ch.assembly_medaka)
 
     //MULTIQC Directory for analysis
 

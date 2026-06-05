@@ -1,7 +1,0 @@
-name: amrfinder_env
-channels:
-  - bioconda
-  - conda-forge
-  - defaults
-dependencies:
-  - ncbi-amrfinderplus

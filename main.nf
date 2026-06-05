@@ -59,24 +59,22 @@ Configuration environment:
 
 // Subworkflows 
 
-if (params.mode == 'assemble') {
-    include { assemble } from "$projectDir/subworkflow/assemble" 
+if (params.mode == 'assembly') {
+    include { assembly } from "$projectDir/subworkflow/assembly" 
 } else if (params.mode == 'hybrid') {
     include { hybrid } from "$projectDir/subworkflow/hybrid"
 } else if (params.mode == 'hybrid_vc') {
     include { hybrid_vc} from "$projectDir/subworkflow/hybrid_vc"
 } else {
-    error "Invalid mode: ${params.mode}. Please specify 'assamble' ,'hybrid' or 'hybrid_vc'"
+    error "Invalid mode: ${params.mode}. Please specify 'assambly' or'hybrid' with --mode"
 }
 
 // Definir el workflow principal
 workflow {
-    if (params.mode == 'assemble') {
-        assemble()  
+    if (params.mode == 'assembly') {
+        assembly()  
     } else if (params.mode == 'hybrid') {
         hybrid()
-    } else if (params.mode == 'hybrid_vc') {
-        hybrid_vc()
     }
 }
 
@@ -125,7 +123,7 @@ def checkInputParams() {
         fatal_error = true
     }
     if (!params.mode) {
-        log.warn("You need to provide a valid mode with --mode (assemble, hybrid)")
+        log.warn("You need to provide a valid mode with --mode (assembly, hybrid)")
         fatal_error = true
     }
     if( params.mode == 'hybrid' && !params.short_inputs ) {
