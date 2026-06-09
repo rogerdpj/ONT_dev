@@ -1,52 +1,47 @@
-/*
-DSL2 channels
-*/
 nextflow.enable.dsl=2
 
 log.info """\
-
               ONT - ASSEMBLY
 
             P A R A M E T E R S
 ==============================================
 Configuration environemnt:
+Configuration environment:
     Fastq directory:           $params.input
     Out directory:             $params.outdir
     Plasmid analysis:          $params.plasmid
     Organism:                  $params.organism
-"""
-    .stripIndent()
+""".stripIndent()
 
-//Call all the sub-work
-include { PREPARE_KRAKEN_DB                             }     from '../bin/kraken/db_set'
-include { QC                                            }     from '../bin/qc/main'
-include { TRIMMING                                      }     from '../bin/trimming/main'
-include { KRAKEN_ONT;SEQTK_PRUNE                        }     from '../bin/kraken/main'
-include { NANOCOMP                                      }     from '../bin/qc/nanocomp/main'
-include { SUB_SAMPLE_2 as ASSEMBLY                      }     from '../bin/assembly/fly/main'
-include { POLISHING_ROUND                               }     from '../bin/polishing/main'
-include { MEDAKA                                        }     from '../bin/assembly/medaka/main'
-include { DNAAPLER                                      }     from '../bin/polishing/dnaapler_assembly'
-include { WRAP                                          }     from '../bin/polishing/wrap_2'
-include { PROKKA                                        }     from '../bin/annotation/prokka/main'
-include { BAKTA                                         }     from '../bin/annotation/bakta/main_3'
-include { ENRICHMENT_ANNOTATION                         }     from '../bin/annotation/main_2'
-include { BUSCO                                         }     from '../bin/qc/busco/main'
-include { QUAST                                         }     from '../bin/qc/quast/main'
-include { MULTIQC                                       }     from '../bin/qc/multiqc/main'
-include { AMR                                           }     from '../bin/AMR/abricate/main'
-include { AMR_2                                         }     from '../bin/AMR/resfinder/main'
-include { MLST                                          }     from '../bin/mlst/main'
-include { BAKTA_SET_DB                                  }     from '../bin/annotation/bakta/db_set'
-include { PLASMID_SEARCH                                }     from '../bin/plasmid/main'
+include { PREPARE_KRAKEN_DB                             }     from '../modules/kraken/db_set'
+include { BAKTA_SET_DB                                  }     from '../modules/annotation/bakta/db_set'
+include { QC                                            }     from '../modules/qc/main'
+include { TRIMMING                                      }     from '../modules/trimming/main'
+include { KRAKEN_ONT;SEQTK_PRUNE                        }     from '../modules/kraken/main'
+include { NANOCOMP                                      }     from '../modules/qc/nanocomp/main'
+include { SUB_SAMPLE_2 as ASSEMBLY                      }     from '../modules/assembly/flye/main'
+include { POLISHING_ROUND                               }     from '../modules/polishing/main'
+include { MEDAKA                                        }     from '../modules/assembly/medaka/main'
+include { DNAAPLER                                      }     from '../modules/polishing/dnaapler_assembly'
+include { WRAP                                          }     from '../modules/polishing/wrap_2'
+include { PROKKA                                        }     from '../modules/annotation/prokka/main'
+include { BAKTA                                         }     from '../modules/annotation/bakta/main_3'
+include { ENRICHMENT_ANNOTATION                         }     from '../modules/annotation/main_2'
+include { BUSCO                                         }     from '../modules/qc/busco/main'
+include { QUAST                                         }     from '../modules/qc/quast/main'
+include { MULTIQC                                       }     from '../modules/qc/multiqc/main'
+include { AMR                                           }     from '../modules/AMR/abricate/main'
+include { AMR_2                                         }     from '../modules/AMR/resfinder/main'
+include { MLST                                          }     from '../modules/mlst/main'
+include { PLASMID_SEARCH                                }     from '../modules/plasmid/main'
 
 workflow assembly {
     krakenprocess_output = workflow_kraken_process()
     preprocess_output = pre_process(krakenprocess_output.DB_CH)
-    assambleprocess_output = assamble_process(preprocess_output.prune_reads_ch, krakenprocess_output.DB_BAKTA_CH)
-    amrprocess_output = amr_process (assambleprocess_output.wrap_ch)
+    assemblyprocess_output = assembly_process(preprocess_output.prune_reads_ch, krakenprocess_output.DB_BAKTA_CH)
+    amrprocess_output = amr_process (assemblyprocess_output.wrap_ch)
     if (params.plasmid) {
-        plasmidprocess_output = workflow_plasmid(assambleprocess_output.wrap_ch)
+        plasmidprocess_output = workflow_plasmid(assemblyprocess_output.wrap_ch)
     }
 }
 
@@ -99,7 +94,7 @@ workflow pre_process {
     
 }
 
-workflow assamble_process {
+workflow assembly_process {
     take:
     prune_reads_ch
     DB_BAKTA_CH
@@ -117,11 +112,11 @@ workflow assamble_process {
             tuple(barcode_id, barcode_file, genome_size, sample_code)
         }
 
-    fly_ch = ASSEMBLY(reads_with_size_ch)
+    flye_ch = ASSEMBLY(reads_with_size_ch)
 
 //POLISHING PROCESS
-//Porcesar el emit del assembly en fly para determinar numeros de polishing
-coverage_ch = fly_ch.info_cov
+//Porcesar el emit del assembly en flye para determinar numeros de polishing
+coverage_ch = flye_ch.info_cov
     .map { sample_code, info_file -> 
         // Lee el archivo `assembly_info.txt` y extrae la cobertura
         def cov_value = info_file
@@ -130,20 +125,41 @@ coverage_ch = fly_ch.info_cov
             .drop(1)      // Omite la cabecera
             .collect { line -> line.split("\t")[2] as int }[0]  // Extrae la columna 'cov.' (índice 2) y convierte a int
         tuple(sample_code, cov_value)
+    // POLISHING PROCESS
+    // Extract coverage from the assembly_info.txt file to determine the number of polishing rounds
+    coverage_ch = flye_ch.info_cov
+        .map { sample_code, info_file -> 
+            // Read assembly_info.txt and extract the 'cov.' column (index 2)
+            def cov_value = info_file
+                .text
+                .split("\n")
+                .drop(1)
+                .collect { line -> line.split("\t")[2] as int }[0]
+            tuple(sample_code, cov_value)
+        }
+
+    // Create a channel mapping sample_code to reads for joining with assembly results
+    reads_by_sample_ch = reads_with_size_ch.map { barcode_id, barcode_file, genome_size, sample_code ->
+        tuple(sample_code, barcode_file)
     }
 
 
-// Creacion de channel que combina los input para el procesamiento de polishing en relacion al coverage obtneido en fly 
+// Creacion de channel que combina los input para el procesamiento de polishing en relacion al coverage obtneido en flye 
     sample_fixe = reads_with_size_ch.map { tupla ->
         def pathread = tupla [1]
         def sample_code = tupla [3]
         return tuple(sample_code, pathread)}
 
     polished_ch = sample_fixe
-        .join(fly_ch.fly_assambly_tuple)
+    // Combine reads, assembly, and coverage to determine polishing rounds
+    polished_ch = reads_by_sample_ch
+        .join(flye_ch.flye_assembly_tuple)
         .join(coverage_ch)
         .map { sample_code, trimmed_reads, assembly_fasta, cov_value -> 
             def max_rounds = (cov_value <= 14) ? 8 : 5 //asignacion de numero de polishing ( nªround each raund inclue: minimap + racon )
+            // Assign polishing rounds based on coverage:
+            // Low coverage (<=14x) gets 8 rounds; higher coverage gets 5 rounds.
+            def max_rounds = (cov_value <= 14) ? 8 : 5 
             tuple(sample_code, trimmed_reads, assembly_fasta, max_rounds)
         }
 
@@ -155,11 +171,9 @@ coverage_ch = fly_ch.info_cov
             tuple(sample_code, trimmed_reads, final_polishing_fasta)
         }
    
-    medaka_consensum_ch= MEDAKA(medaka_ch)
+    medaka_consensus_ch= MEDAKA(medaka_ch)
 
-    consensum_file_ch = medaka_consensum_ch.assembly_medaka
-
-    dna_apler_ch = DNAAPLER(medaka_consensum_ch.assembly_medaka)
+    dna_apler_ch = DNAAPLER(medaka_consensus_ch.assembly_medaka)
 
     wrap_ch = WRAP(dna_apler_ch.reoriented_assembly)
 
@@ -173,9 +187,9 @@ coverage_ch = fly_ch.info_cov
 
     ENRICHMENT_ANNOTATION(agt_ch)
 
-    busco_ch = BUSCO(medaka_consensum_ch.assembly_medaka)
+    busco_ch = BUSCO(medaka_consensus_ch.assembly_medaka)
     
-    quast_ch = QUAST(medaka_consensum_ch.assembly_medaka)
+    quast_ch = QUAST(medaka_consensus_ch.assembly_medaka)
 
     //MULTIQC Directory for analysis
 
