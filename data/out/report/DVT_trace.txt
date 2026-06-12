@@ -1,4 +1,0 @@
-task_id	hash	native_id	name	status	exit	submit	duration	realtime	%cpu	peak_rss	peak_vmem	rchar	wchar
-3	99/a90828	3903245	assemble:pre_process:QC (QC RAW data barcode22)	CACHED	0	2025-12-12 14:04:37.293	7m 16s	7m 13s	4.8%	253.1 MB	33.8 GB	135.2 MB	49.6 MB
-1	ea/9b072d	3902925	assemble:workflow_kraken_process:BAKTA_SET_DB (bakta_DB_light)	CACHED	0	2025-12-12 14:04:37.006	3m 29s	3m 27s	2.8%	3 MB	8.3 MB	4 GB	4 GB
-4	01/62e09b	97976	assemble:pre_process:TRIMMING (Prunning of barcode22)	CACHED	0	2025-12-12 14:11:53.618	5m 57s	5m 54s	90.6%	237.1 MB	33.7 GB	340.3 MB	191.4 MB
