@@ -1,15 +1,5 @@
 /*
   ============================================================
-
-   ___  _   _ _____   ____    _    ____ _____ _____ ____  ___    _    _      
-  / _ \| \ | |_   _| | __ )  / \  / ___|_   _| ____|  _ \|_ _|  / \  | |     
- | | | |  \| | | |   |  _ \ / _ \| |     | | |  _| | |_) || |  / _ \ | |     
- | |_| | |\  | | |   | |_) / ___ \ |___  | | | |___|  _ < | | / ___ \| |___  
-  \___/|_| \_| |_|   |____/_/ __\_\____|_|_|_|_____|_| \_\___/_/   \_\_____| 
-       / \  | \ | |  / \  | | \ \ / / ___|_ _/ ___|                          
-      / _ \ |  \| | / _ \ | |  \ V /\___ \| |\___ \                          
-     / ___ \| |\  |/ ___ \| |___| |  ___) | | ___) |                         
-    /_/   \_\_| \_/_/   \_\_____|_| |____/___|____/
     N F   P I P E L I N E - ONT_BACTERIAL_ANALYSIS
 
   Oxford Nanopore (ONT) Sequencing Pipeline - Nextflow
@@ -19,7 +9,7 @@
   Description:   A scalable Nextflow pipeline for automated WGS analysis, 
                  optimized for Oxford Nanopore and hybrid ONT–Illumina 
                  assemblies in clinical microbiology research.
-  Version:       1.0.0
+  Version:       2.0.0
 
     ============================================================
 */
@@ -33,7 +23,7 @@ if (params.help) {
 
 checkInputParams()
 
-reference = file("${params.reference}")
+// Logging 
 
 log.info """\
 
@@ -51,39 +41,46 @@ log.info """\
 N F   P I P E L I N E - ONT_BACTERIAL_ANALYSIS 
 ==============================================
 Configuration environment:
-    Pipeline mode:             $params.mode
-    Genome size file:          $params.genome_size_file
-    Profile:                   $workflow.profile
-"""
-    .stripIndent()
+    Pipeline mode:             ${params.mode}
+    Genome size file:          ${params.genome_size_file}
+    Profile:                   ${workflow.profile}
+""".stripIndent()
 
-// Subworkflows 
 
-if (params.mode == 'assemble') {
-    include { assemble } from "$projectDir/subworkflow/assemble" 
-} else if (params.mode == 'hybrid') {
-    include { hybrid } from "$projectDir/subworkflow/hybrid"
-} else if (params.mode == 'hybrid_vc') {
-    include { hybrid_vc} from "$projectDir/subworkflow/hybrid_vc"
-} else {
-    error "Invalid mode: ${params.mode}. Please specify 'assamble' ,'hybrid' or 'hybrid_vc'"
-}
+log.info """\
+Run summary:
+    Input:                     ${params.input}
+    Output:                    ${params.outdir}
+    Short reads:               ${params.short_inputs ?: 'N/A'}
+    Plasmid analysis:          ${params.plasmid}
+    Organism:                  ${params.organism}
+""".stripIndent()
 
-// Definir el workflow principal
+
+// Subworkflow import
+
+include { assembly }   from "$projectDir/subworkflow/assembly"
+//include { hybrid }     from "$projectDir/subworkflow/hybrid"
+
+// Main workflow
+
 workflow {
-    if (params.mode == 'assemble') {
-        assemble()  
-    } else if (params.mode == 'hybrid') {
-        hybrid()
-    } else if (params.mode == 'hybrid_vc') {
-        hybrid_vc()
+
+    switch (params.mode) {
+
+        case 'assembly':
+            assembly()
+            break
+        case 'hybrid':
+            hybrid()
+            break
+        default:
+            error "Invalid mode: ${params.mode}. Valid options: assembly and hybrid"
     }
 }
 
+// Functions 
 
-////////////////////////////////////////////////////////////////////////////////
-// FUNCTIONS                                                                  //
-////////////////////////////////////////////////////////////////////////////////
 
 def printHelp() {
     def readmeFile = file("${projectDir}/README.md")
@@ -92,16 +89,12 @@ def printHelp() {
     if (readmeFile.exists()) {
         log.info "\n"
         readmeFile.eachLine { line ->
-            // Start printing when we hit the Usage header
-            if (line.contains("Usage: nextflow run main.nf [--help] [--mode VAR] [--genome_size_file VAR] [--input VAR] [--short_inputs VAR] [--outdir VAR] [--organism VAR] [--min_length VAR] [--min_mean_q VAR] [--keep_percent VAR] [--plasmid] [--bakta_db_define VAR] [--db_select VAR] [--abricate_db VAR] [-w VAR] [-profile VAR]")) {
+            if (line.contains("Usage:")) {
                 printSection = true
             }
-            // Stop printing when we hit the next major header (Output)
             if (line.contains("## Output")) {
                 printSection = false
             }
-            
-            // Print the line if we are inside the section
             if (printSection) {
                 log.info line
             }
@@ -112,31 +105,46 @@ def printHelp() {
     }
 }
 
+
+
 def checkInputParams() {
-    // Check required parameters and display error messages
+
     boolean fatal_error = false
 
     if (!params.input) {
-        log.warn("You need to provide a valid input directory with --input")
+        log.warn("Missing --input")
+        fatal_error = true
+    } else if (!file(params.input).exists()) {
+        log.warn("Input path does not exist: ${params.input}")
         fatal_error = true
     }
+
+
     if (!params.genome_size_file) {
-        log.warn("You need to provide a valid genome size file with --genome_size_file")
+        log.warn("Missing --genome_size_file")
+        fatal_error = true
+    } else if (!file(params.genome_size_file).exists()) {
+        log.warn("Genome size file does not exist: ${params.genome_size_file}")
         fatal_error = true
     }
+
     if (!params.mode) {
-        log.warn("You need to provide a valid mode with --mode (assemble, hybrid)")
+        log.warn("Missing --mode (assembly | hybrid)")
         fatal_error = true
     }
-    if( params.mode == 'hybrid' && !params.short_inputs ) {
-        log.warn "You need to provide a valid short read data with --short_inputs when using hybrid mode"
+
+    if (params.mode == 'hybrid' && !params.short_inputs) {
+        log.warn("Hybrid mode requires --short_inputs")
         fatal_error = true
     }
-    if( !['docker','singularity','conda'].contains( workflow.profile ) ) {
-        log.warn "You need to provide a valid profile with -profile (docker, singularity, conda)"
+
+    def valid_profiles = ['docker','singularity','conda']
+    if (!workflow.profile || !valid_profiles.any { workflow.profile.tokenize(',').contains(it) }) {
+        log.warn("Invalid profile: use docker, singularity or conda")
         fatal_error = true
     }
+
     if (fatal_error) {
-        error "Missing one or more required parameters"
+        error "Missing or invalid parameters"
     }
 }
