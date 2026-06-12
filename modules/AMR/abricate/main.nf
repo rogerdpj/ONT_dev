@@ -1,22 +1,19 @@
 process AMR {
-    tag "ABRICATE search for ${sample_code}"
-    label 'abricate_tool'
+    tag "ABRICATE for ${sample_code}"
+    label 'env_abricate'
     
-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        "docker://${params.abricate.docker}" :
-        params.abricate.docker }"
-
-    publishDir "${params.outdir}/3-AMR/ABRICATE", mode: 'copy'
+    publishDir "${params.outdir}/3-AMR/ABRICATE", mode: 'copy', pattern: "*.tsv"
+    publishDir "${params.outdir}/versions", mode: 'copy', pattern: "*.version.txt"
 
     input:
     tuple val(sample_code), path(assembly_file)
     val organism
 
     output:
-    path("${sample_code}_combined_abricate_report.tsv"), emit: abricate_report
+    path("${sample_code}_abricate_report.tsv"), emit: abricate_report
+    path "${task.process}.version.txt", emit: versions
 
     script:
-
     // Convert organism name to lowercase and trim whitespace
     def organism_lc = organism.toLowerCase().trim()
 
@@ -30,34 +27,25 @@ process AMR {
     // Get databases for this organism or use default
     def dbs = db_map.get(organism_lc, db_map["default"])
     def dbs_str = dbs.collect { "\"${it}\"" }.join(" ")
-    def usingContainer = (workflow.containerEngine != null)
 
-    def dbEnvBlock
-    if (usingContainer) {
-        dbEnvBlock = params.abricate_db ?
-            "export ABRICATE_DB='${params.abricate_db}'" :
-            ""
-    } else {
-        dbEnvBlock = params.abricate_db ?
-            "export ABRICATE_DB='${params.abricate_db}'" :
-            "echo '[AMR] INFO: ABRICATE_DB is not defined. " +
-            "If you are using -profile conda, pass --abricate_db /path/to/db " +
-            "to specify where the Abricate databases are located.' >&2"
-}
+    def dbEnvBlock = params.abricate_db ?
+        "export ABRICATE_DB='${params.abricate_db}'" :
+        ""
 
     """
     set -euo pipefail
+
+    echo -e "abricate\t\$(abricate --version 2>&1 | head -n 1)" > ${task.process}.version.txt
 
     ${dbEnvBlock}
 
     DBS=(${dbs_str})
 
-    echo -e "FILE\\tSEQUENCE\\tSTART\\tEND\\tSTRAND\\tGENE\\tCOVERAGE\\tCOVERAGE_MAP\\tGAPS\\t%COVERAGE\\t%IDENTITY\\tDATABASE\\tACCESSION\\tPRODUCT\\tRESISTANCE" > ${sample_code}_combined_abricate_report.tsv
+    echo -e "FILE\\tSEQUENCE\\tSTART\\tEND\\tSTRAND\\tGENE\\tCOVERAGE\\tCOVERAGE_MAP\\tGAPS\\t%COVERAGE\\t%IDENTITY\\tDATABASE\\tACCESSION\\tPRODUCT\\tRESISTANCE" > ${sample_code}_abricate_report.tsv
 
     for db in \${DBS[@]}; do
         echo "[AMR] Running ABRICATE with database: \$db"
-        abricate --db \$db ${assembly_file} --noheader >> ${sample_code}_combined_abricate_report.tsv
+        abricate --db \$db ${assembly_file} --noheader >> ${sample_code}_abricate_report.tsv
     done
-
     """
 }

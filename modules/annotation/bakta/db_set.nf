@@ -1,12 +1,7 @@
 process BAKTA_SET_DB {
-    tag "bakta_DB_light"
+    tag "BAKTA DB setup"
+    label 'env_bakta_db'
     
-    container {
-        workflow.containerEngine == 'singularity' ?
-            "docker://${params.bakta_db.docker}" :
-            params.bakta_db.docker
-    }
-
     output:
     path("db-light/db-light"), emit: db_bakta_dir
 

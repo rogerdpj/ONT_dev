@@ -1,32 +1,43 @@
 process KRAKEN_ONT {
   tag "Taxonomic classification of ${sample_id}"
-  label 'kraken_run'
+  label 'env_kraken'
 
-  container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-      "docker://${params.kraken.docker}" :
-      params.kraken.docker }"
-  
   cpus   { params.kraken_cpus ?: 4 }
   memory { params.kraken_mem  ?: '16 GB' }
   time '24h'
   stageInMode 'symlink'
 
+  publishDir "${params.outdir}/versions", mode: 'copy', pattern: "*.version.txt"
+  publishDir "${params.outdir}/logs/kraken", mode: 'copy', pattern: "*.report.txt"
+  publishDir "${params.outdir}/logs/kraken", mode: 'copy', pattern: "*.kraken.log"
+
   input:
-  tuple val(sample_id), path(reads_sn), path (db_dir)
+  tuple val(sample_id), path(reads_sn) 
+  path db_dir
 
   output:
-  tuple val(sample_id), path("${sample_id}.kraken"),                emit: kraken_dir
+  tuple val(sample_id), path("${sample_id}.kraken"),                emit: kraken_out
   tuple val(sample_id), path("${sample_id}.kraken.noise.clean.id"), emit: keep_ids
   path("${sample_id}.report.txt"),                                  emit: report
+  path "${task.process}.version.txt",                                              emit: versions
+  tuple val(sample_id), path("${sample_id}.kraken.log"),            emit: log
 
   script:
   """
-  test -r "${db_dir}/hash.k2d" -a -r "${db_dir}/opts.k2d" -a -r "${db_dir}/taxo.k2d" \
-    || { echo "DB incompleta en ${db_dir}"; ls -lah "${db_dir}"; exit 2; }
+  set -euo pipefail
 
-  # ONT: un solo FASTQ, sin --paired
+  echo "kraken2\t\$(kraken2 --version 2>&1 | head -n 1)" > ${task.process}.version.txt
+  
+  for f in hash.k2d opts.k2d taxo.k2d; do
+      [[ -r "${db_dir}/${params.db_select}/\$f" ]] || { 
+          echo "Missing file: ${db_dir}/${params.db_select}/\$f"; 
+          ls -lah "${db_dir}/${params.db_select}";
+          exit 2; 
+      }
+  done
+
   kraken2 \
-    --db "${db_dir}" \
+    --db "${db_dir}/${params.db_select}" \
     "${reads_sn}" \
     --threads ${task.cpus} \
     --gzip-compressed \
@@ -34,41 +45,46 @@ process KRAKEN_ONT {
     ${ params.kraken2_extra_args ?: '' } \
     ${ params.kraken_confidence ? "--confidence ${params.kraken_confidence}" : "" } \
     --report "${sample_id}.report.txt" \
-    > "${sample_id}.kraken"
+    > "${sample_id}.kraken" \
+    2> "${sample_id}.kraken.log"
 
-  cat > ids.awk << 'AWK'
+  awk '
   BEGIN{
-    split("9443 9606 9605 9604 9598 9593 9601 9526 9483 314295 40674", a, " ");
+    split("${params.kraken_deny_taxids ?: ''}", a, " ");
     for(i in a) deny[a[i]]=1;
   }
-  { status=\$1; rid=\$2; tax=\$3;
+  { 
+    status=\$1; rid=\$2; tax=\$3;
     if (status=="U") { print rid; next }
     if (!(tax in deny)) { print rid }
   }
-  AWK
-
-  awk -f ids.awk "${sample_id}.kraken" > "${sample_id}.kraken.noise.clean.id"
+  ' "${sample_id}.kraken" > "${sample_id}.kraken.noise.clean.id"
   """
 }
 
-
 process SEQTK_PRUNE {
   tag "Filtering contaminants of ${sample_id}"
-  label 'seqtk_prune'
+  label 'env_seqtk'
   
-  container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-      "docker://${params.short_wgs.docker}" :
-      params.short_wgs.docker }"
+  publishDir "${params.outdir}/versions", mode: 'copy', pattern: "*.version.txt"
+  publishDir "${params.outdir}/logs/seqtk", mode: 'copy', pattern: "*.log"
+
 
   input:
     tuple val(sample_id), path(reads_sn), path(keep_ids)
     
   output:
     tuple val(sample_id), path("${sample_id}.prune.clean.fastq.gz"), emit: pruned_reads
+    path "${task.process}.version.txt", emit: versions
+    tuple val(sample_id), path("${sample_id}.seqtk.log"), emit: log
 
   script:
   """
-  seqtk subseq ${reads_sn} ${keep_ids} | gzip > ${sample_id}.prune.clean.fastq.gz
+  set -euo pipefail
   
+  echo "seqtk\t\$(seqtk --version 2>&1 | head -n 1)" > ${task.process}.version.txt
+
+  seqtk subseq ${reads_sn} ${keep_ids} | gzip > ${sample_id}.prune.clean.fastq.gz \
+  2> ${sample_id}.seqtk.log
   """
 }

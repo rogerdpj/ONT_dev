@@ -1,26 +1,30 @@
 process NANOCOMP {
-    tag "Creating Nanocomp summary"
+    tag "Nanocomp comparison"
     label 'env_nanocomp'
 
-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        "docker://${params.long_read.docker}" :
-        params.long_read.docker }"
-    
-    publishDir "${params.outdir}/1-QC/data_QC", mode: 'copy'
+    publishDir "${params.outdir}/1-QC/data_QC", mode: 'copy', pattern: "Nanocomp*"
+    publishDir "${params.outdir}/versions", mode: 'copy', pattern: "*.version.txt"
+
 
     input:
-    path (barcode_dir)
-    path (barcode_id_clean)
+    tuple val(id), val(labels), path(files)
 
     output:
-
-    path "Nanocomp"
+    path "Nanocomp", emit: report
+    path "${task.process}.version.txt", emit: versions
 
     script:
-
     """
-    source activate nanopore    
-    NanoComp --fastq ${barcode_dir} ${barcode_id_clean} -o Nanocomp
-    
+    set -euo pipefail
+
+    echo "nanocomp\t\$(NanoComp --version 2>&1 || NanoComp -h 2>&1 | head -n 1)" > ${task.process}.version.txt
+
+    for i in \$(seq 0 \$((\${#files[@]}-1))); do
+        ln -sf "\${files[\$i]}" "${id}_\${labels[\$i]}.fastq.gz"
+    done
+
+    NanoComp \\
+        --fastq *.fastq.gz \\
+        -o Nanocomp
     """
 }

@@ -15,8 +15,8 @@ DB_URL="${DB_URL:-}"                      # opcional: URL directa para override 
 DB_URL_CHECKSUM="${DB_URL_CHECKSUM:-}"    # opcional: URL a .sha256 o .md5
 
 # URLs FIJAS (ajusta cuando haya nuevas releases)
-DB_URL_FULL_DEFAULT="https://genome-idx.s3.amazonaws.com/kraken/k2_standard_20250714.tar.gz"
-DB_URL_16_DEFAULT="https://genome-idx.s3.amazonaws.com/kraken/k2_standard_16_GB_20250714.tar.gz"
+DB_URL_FULL_DEFAULT="https://genome-idx.s3.amazonaws.com/kraken/k2_standard_20260226.tar.gz"
+DB_URL_16_DEFAULT="https://genome-idx.s3.amazonaws.com/kraken/k2_standard_16_GB_20260226.tar.gz"
 
 export KRAKEN2_DEFAULT_DB="$DB_DIR"
 

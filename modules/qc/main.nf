@@ -1,28 +1,30 @@
 process QC {
-    tag "QC RAW data ${barcode}"
+    tag "QC:${barcode}"
     label 'env_nanoplot'
-    
+    cpus 2
+
     cache 'deep'
     
-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        "docker://${params.long_read.docker}" :
-        params.long_read.docker }"
-    
     publishDir "${params.outdir}/1-QC/data_QC/Nanoplot", mode: 'copy', pattern: "Nanoplot_*"
+    publishDir "${params.outdir}/versions", mode: 'copy', pattern: "*.version.txt"
 
     input:
     tuple val(barcode), path(barcode_dir)
 
     output:
     tuple val(barcode), path("barcode_${barcode}.fastq.gz"), emit: fastq_combine
-    path "Nanoplot_${barcode}/", emit: nanoplot_output
+    tuple val(barcode), path("Nanoplot_${barcode}/"), emit: nanoplot_output
+    path "${task.process}.version.txt", emit: versions
+
 
     script:
     """
+    echo "NanoPlot\t\$(NanoPlot --version 2>&1)" > ${task.process}.version.txt
 
-    cat ${barcode_dir}/*.fastq.gz > barcode_${barcode}.fastq.gz
+    cat ${barcode_dir}/*.fastq.gz > barcode_${barcode}.fastq.gz || exit 1
 
-    NanoPlot -t2 \\
+    NanoPlot \\
+        -t ${task.cpus}  \\
         -o Nanoplot_${barcode} \\
         --fastq barcode_${barcode}.fastq.gz
     """

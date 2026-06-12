@@ -2,30 +2,33 @@ process MEDAKA {
     tag "Medaka consensus for ${sample_code}"
     label 'env_medaka'
     
-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        "docker://${params.medaka.docker}" :
-        params.medaka.docker }"
-
-    publishDir "${params.outdir}/2-Assembly", mode: 'copy', saveAs: { filename ->
-        if (filename.endsWith(".fasta")) {
-            return null
-        } else {
-            return "2-Medaka_results/${sample_code}/"
-        }
-    }
+    publishDir "${params.outdir}/versions", mode: 'copy', pattern: "*.version.txt"
     
     input:
     tuple val(sample_code), path(trimmed_reads), path(final_polishing_fasta)
 
     output:
     path "medaka_output_${sample_code}"
-    tuple val(sample_code), path("${sample_code}_consensus.fasta"), emit: assemble_medaka
+    tuple val(sample_code), path("${sample_code}_consensus.fasta"), emit: assembly_medaka
+    path "${task.process}.version.txt", emit: versions
+
 
     script:
     """
+    set -euo pipefail
+
+    echo -e "medaka\t\$(medaka_consensus 2>&1 | head -n 1)" > ${task.process}.version.txt
+
+    echo "Using Medaka model: ${params.medaka_model}"
+    
     mkdir -p medaka_output_${sample_code}
 
-    medaka_consensus -i ${trimmed_reads} -d ${final_polishing_fasta} -o medaka_output_${sample_code} -t 2 --bacteria
+    medaka_consensus \
+        -i ${trimmed_reads} \
+        -d ${final_polishing_fasta} \
+        -o medaka_output_${sample_code} \
+        -t 2 \
+        -m ${params.medaka_model}
 
     mv medaka_output_${sample_code}/consensus.fasta ${sample_code}_consensus.fasta
     """

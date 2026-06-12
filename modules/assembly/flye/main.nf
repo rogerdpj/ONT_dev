@@ -1,12 +1,11 @@
-process SUB_SAMPLE_2 {
+process ASSEMBLY {
     tag "Flye assembly of ${sample_code}/${barcode_id} "
-    label 'flye_long_reads'
-
-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        "docker://${params.long_read.docker}" :
-        params.long_read.docker }"
+    label 'env_flye'
         
-    publishDir "${params.outdir}/2-Assembly/1-Flye_structural", mode: 'copy'
+    publishDir "${params.outdir}/2-Assembly/1-Flye_structural", mode: 'copy', pattern: "flye_output_${sample_code}/*"
+    publishDir "${params.outdir}/2-Assembly/1-Flye_structural", mode: 'copy', pattern: "${sample_code}_NanoStat.txt"
+    publishDir "${params.outdir}/versions", mode: 'copy', pattern: "*version.txt"
+
 
     input:
 
@@ -14,22 +13,32 @@ process SUB_SAMPLE_2 {
 
     output:
 
-    tuple val(sample_code),path("flye_output_${sample_code}/assembly.fasta"), emit: fly_assambly_tuple
-    tuple val(sample_code),path("flye_output_${sample_code}/assembly_info.txt"), emit: info_cov
-    tuple val(sample_code),path("flye_output_${sample_code}/assembly_graph.gfa"), emit: grafic_assemble
-    tuple val(sample_code),path("dedup_${sample_code}_NanoStat.txt"), emit: quality_control
+    tuple val(sample_code), path("flye_output_${sample_code}/assembly.fasta"), emit: assembly
+    tuple val(sample_code), path("flye_output_${sample_code}/assembly_info.txt"), emit: info_cov
+    tuple val(sample_code), path("flye_output_${sample_code}/assembly_graph.gfa"), emit: graph
+    tuple val(sample_code), path("${sample_code}_NanoStat.txt"), emit: qc
+    path "${task.process}.version.txt", emit: versions
 
     script:
 
-    """
-    # Paso 1: Eliminar IDs duplicados en las lecturas usando seqkit
-    seqkit rmdup -s -i ${barcode_file} -o dedup_${sample_code}.fastq
+    """    
+    set -euo pipefail
+    
+    echo -e "flye\t\$(flye --version 2>&1 | head -n 1)" > ${task.process}.version.txt
+    echo -e "nanostat\t\$(NanoStat --version 2>&1)" >> ${task.process}.version.txt
 
-    # Generar reporte de calidad con NanoStat para evaluar resultados
-    NanoStat --fastq dedup_${sample_code}.fastq > dedup_${sample_code}_NanoStat.txt
-
-    # Paso 2: Ejecutar Flye usando el archivo sin duplicados
-    flye --nano-raw dedup_${sample_code}.fastq --out-dir flye_output_${sample_code} --genome-size ${genome_size} --plasmids --threads 8
-
+    INPUT=${barcode_file}
+  
+    # QC
+    NanoStat --fastq \${INPUT} > ${sample_code}_NanoStat.txt
+    
+    # Assembly
+    flye \\
+        --nano-hq \${INPUT} \\
+        --out-dir flye_output_${sample_code} \\
+        --genome-size ${genome_size} \\
+        --iterations 0 \\
+        --asm-coverage 40 \\
+        --threads ${task.cpus}
     """
 }

@@ -5,7 +5,6 @@ log.info """\
 
             P A R A M E T E R S
 ==============================================
-Configuration environemnt:
 Configuration environment:
     Fastq directory:           $params.input
     Out directory:             $params.outdir
@@ -13,215 +12,253 @@ Configuration environment:
     Organism:                  $params.organism
 """.stripIndent()
 
+
+// MODULES
+
 include { PREPARE_KRAKEN_DB                             }     from '../modules/kraken/db_set'
-include { BAKTA_SET_DB                                  }     from '../modules/annotation/bakta/db_set'
+
 include { QC                                            }     from '../modules/qc/main'
 include { TRIMMING                                      }     from '../modules/trimming/main'
 include { KRAKEN_ONT;SEQTK_PRUNE                        }     from '../modules/kraken/main'
 include { NANOCOMP                                      }     from '../modules/qc/nanocomp/main'
-include { SUB_SAMPLE_2 as ASSEMBLY                      }     from '../modules/assembly/flye/main'
+
+include { ASSEMBLY                                      }     from '../modules/assembly/flye/main'
 include { POLISHING_ROUND                               }     from '../modules/polishing/main'
 include { MEDAKA                                        }     from '../modules/assembly/medaka/main'
-include { DNAAPLER                                      }     from '../modules/polishing/dnaapler_assembly'
-include { WRAP                                          }     from '../modules/polishing/wrap_2'
-include { PROKKA                                        }     from '../modules/annotation/prokka/main'
-include { BAKTA                                         }     from '../modules/annotation/bakta/main_3'
-include { ENRICHMENT_ANNOTATION                         }     from '../modules/annotation/main_2'
+include { DNAAPLER                                      }     from '../modules/polishing/dnaapler/main'
+include { WRAP                                          }     from '../modules/polishing/wrap/main'
+
+include { BAKTA                                         }     from '../modules/annotation/bakta/main'
+
 include { BUSCO                                         }     from '../modules/qc/busco/main'
 include { QUAST                                         }     from '../modules/qc/quast/main'
+include { MOSDEPTH                                      }     from '../modules/qc/mosdepth/main'
 include { MULTIQC                                       }     from '../modules/qc/multiqc/main'
+
 include { AMR                                           }     from '../modules/AMR/abricate/main'
-include { AMR_2                                         }     from '../modules/AMR/resfinder/main'
+include { AMR_2                                         }     from '../modules/AMR/amrfinder/main'
 include { MLST                                          }     from '../modules/mlst/main'
+
 include { PLASMID_SEARCH                                }     from '../modules/plasmid/main'
 
+// MAIN WORKFLOW
+
 workflow assembly {
-    krakenprocess_output = workflow_kraken_process()
-    preprocess_output = pre_process(krakenprocess_output.DB_CH)
-    assemblyprocess_output = assembly_process(preprocess_output.prune_reads_ch, krakenprocess_output.DB_BAKTA_CH)
-    amrprocess_output = amr_process (assemblyprocess_output.wrap_ch)
+    kraken  = workflow_kraken_process()
+    pre     = pre_process(kraken.kraken_db)
+    asm     = assembly_process(pre.reads)
+    amr_process (asm.assembly)
+    
     if (params.plasmid) {
-        plasmidprocess_output = workflow_plasmid(assemblyprocess_output.wrap_ch)
+        workflow_plasmid(asm.assembly)
     }
 }
 
+// DATABASE SETUP
+
 workflow workflow_kraken_process {
-    //KRAKEN2_DB SETTING
-    db_ready_ch = PREPARE_KRAKEN_DB()
-    DB_CH= db_ready_ch.db_ready
-    //BAKTA DB SETTING
-    db_bakta_ready_ch = BAKTA_SET_DB()
-    DB_BAKTA_CH = db_bakta_ready_ch.db_bakta_dir
+    
+    kraken_db_ready = PREPARE_KRAKEN_DB()
 
     emit:
-    DB_CH
-    DB_BAKTA_CH
+        kraken_db = kraken_db_ready.db_ready
+
 }
+
+// PREPROCESSING
 
 workflow pre_process {
     take:
-    DB_CH
+    kraken_db
 
     main:
-    barcode_dir_ch = channel.fromPath(params.input, type: 'dir').map{barcode_dir -> tuple(barcode_dir.baseName, barcode_dir)}
-    qc_ch = QC(barcode_dir_ch)
-    trimming_before_ch = TRIMMING(qc_ch.fastq_combine)
-    trimming_ch = trimming_before_ch.barcodefile_gz
-    trimming_ch_2 = trimming_before_ch.barcodefile_compress
-    pre_data_qc = qc_ch.fastq_combine
+    // Input discovery
+    reads_raw = Channel
+        .fromPath(params.input, type: 'dir', checkIfExists: true)
+        .map { dir -> tuple(dir.baseName, dir) }
+    
+    // QC
+    qc = QC(reads_raw)
 
-    //KRAKEN
-    READS_DB_CH = trimming_ch_2.combine(DB_CH)
-                .map { sample_id, reads_se, db_dir ->
-                tuple (sample_id, reads_se, db_dir)
-    }
+    // Trimming
+    genome_size_ch = Channel
+        .fromPath(params.genome_size_file)
+        .splitCsv(header: true)
+        .map { row ->
+            tuple(row.barcode, row.genome_size as int)
+        }
     
-    kraken_ch = KRAKEN_ONT (READS_DB_CH)
+    reads_with_target = qc.fastq_combine
+        .join(genome_size_ch, by: 0)
+        .map { barcode, fastq_file, genome_size ->
+            def target_bases = Math.max(
+                genome_size * params.target_coverage,
+                50_000_000
+            )
+            tuple(barcode, fastq_file, target_bases)
+        }
 
-    //PRUNNING
-    fastq_prunning_ch = trimming_ch_2.join(kraken_ch.keep_ids).map {
-        sample_id,reads_sn, keep_ids ->
-        tuple (sample_id, reads_sn, keep_ids)
-    }
+    trimmed = TRIMMING(reads_with_target)
+    reads_trimmed = trimmed.reads_trimmed_gz
+
+    // Kraken input
+    Channel
+        .fromPath("${params.kraken_db_dir}/${params.db_select}/hash.k2d")
+        .map { file(params.kraken_db_dir) }
+        .ifEmpty {
+            PREPARE_KRAKEN_DB().out.db_ready
+        }
+        .set { kraken_db }
+
+    kraken = KRAKEN_ONT(reads_trimmed, kraken_db)
+
+    // Prunning
+    pruning_input = reads_trimmed
+        .join(kraken.keep_ids, by: 0)
+        .map { sample, reads, ids ->
+            tuple(sample, reads, ids)
+        }
+
+    pruned = SEQTK_PRUNE(pruning_input)
+    reads_clean = pruned.pruned_reads
     
-    prune_ch = SEQTK_PRUNE(fastq_prunning_ch)
-    prune_reads_ch = prune_ch.pruned_reads
-    
-    nocomp_ch = NANOCOMP(pre_data_qc.map{i -> i[1]}.collect(), prune_reads_ch.map{i -> i[1]}.collect())
+    // QC comparison
+    raw_fastq = qc.fastq_combine.map { id, f -> tuple(id, "raw", f) }
+    trimmed_fastq = reads_trimmed.map { id, f -> tuple(id, "trimmed", f) }
+    clean_fastq = reads_clean.map { id, f -> tuple(id, "clean", f) }
+
+    nanocomp_input = raw_fastq
+        .mix(trimmed_fastq)
+        .mix(clean_fastq)
+        .groupTuple(by: 0)
+
+    NANOCOMP(nanocomp_input)
 
     emit:
-    prune_reads_ch
-    
+        reads = reads_clean
 }
+
+// ASSEMBLY + POLISHING + QC
 
 workflow assembly_process {
     take:
-    prune_reads_ch
-    DB_BAKTA_CH
+    reads
         
     main:
-
-
-    genome_size_ch = Channel
-                        .fromPath(params.genome_size_file)
-                        .splitCsv(header: true)
-                        .map { row -> tuple(row.barcode, row.genome_size as int, row.sample_code) }
-
-    reads_with_size_ch = prune_reads_ch.join(genome_size_ch)
-        .map { barcode_id, barcode_file, genome_size, sample_code ->
-            tuple(barcode_id, barcode_file, genome_size, sample_code)
+    // Genome metadata
+    genome_size = Channel
+        .fromPath(params.genome_size_file)
+        .splitCsv(header: true)
+        .map { row ->
+            tuple(row.barcode, row.genome_size as int, row.sample_code)
         }
 
-    flye_ch = ASSEMBLY(reads_with_size_ch)
-
-//POLISHING PROCESS
-//Porcesar el emit del assembly en flye para determinar numeros de polishing
-coverage_ch = flye_ch.info_cov
-    .map { sample_code, info_file -> 
-        // Lee el archivo `assembly_info.txt` y extrae la cobertura
-        def cov_value = info_file
-            .text
-            .split("\n")  // Divide en líneas
-            .drop(1)      // Omite la cabecera
-            .collect { line -> line.split("\t")[2] as int }[0]  // Extrae la columna 'cov.' (índice 2) y convierte a int
-        tuple(sample_code, cov_value)
-    // POLISHING PROCESS
-    // Extract coverage from the assembly_info.txt file to determine the number of polishing rounds
-    coverage_ch = flye_ch.info_cov
-        .map { sample_code, info_file -> 
-            // Read assembly_info.txt and extract the 'cov.' column (index 2)
-            def cov_value = info_file
-                .text
-                .split("\n")
-                .drop(1)
-                .collect { line -> line.split("\t")[2] as int }[0]
-            tuple(sample_code, cov_value)
+    reads_with_size = reads
+        .join(genome_size, by: 0)
+        .map { id, read_file, size, sample ->
+            tuple(id, read_file, size, sample)
         }
 
-    // Create a channel mapping sample_code to reads for joining with assembly results
-    reads_by_sample_ch = reads_with_size_ch.map { barcode_id, barcode_file, genome_size, sample_code ->
-        tuple(sample_code, barcode_file)
-    }
+    // Assembly
+    flye = ASSEMBLY(reads_with_size)
 
-
-// Creacion de channel que combina los input para el procesamiento de polishing en relacion al coverage obtneido en flye 
-    sample_fixe = reads_with_size_ch.map { tupla ->
-        def pathread = tupla [1]
-        def sample_code = tupla [3]
-        return tuple(sample_code, pathread)}
-
-    polished_ch = sample_fixe
-    // Combine reads, assembly, and coverage to determine polishing rounds
-    polished_ch = reads_by_sample_ch
-        .join(flye_ch.flye_assembly_tuple)
-        .join(coverage_ch)
-        .map { sample_code, trimmed_reads, assembly_fasta, cov_value -> 
-            def max_rounds = (cov_value <= 14) ? 8 : 5 //asignacion de numero de polishing ( nªround each raund inclue: minimap + racon )
-            // Assign polishing rounds based on coverage:
-            // Low coverage (<=14x) gets 8 rounds; higher coverage gets 5 rounds.
-            def max_rounds = (cov_value <= 14) ? 8 : 5 
-            tuple(sample_code, trimmed_reads, assembly_fasta, max_rounds)
+    // Coverage extraction
+    coverage = flye.info_cov
+        .map { sample, file ->
+            def line = file.text.readLines()[1]
+            def cov = line.tokenize('\t')[2] as int
+            tuple(sample, cov)
         }
 
-    polished_ch_final = POLISHING_ROUND(polished_ch)
+    flye_assembly = flye.assembly
 
-    medaka_ch = sample_fixe
-        .join(polished_ch_final)
-        .map { sample_code, trimmed_reads, final_polishing_fasta ->
-            tuple(sample_code, trimmed_reads, final_polishing_fasta)
+    // Map reads by sample
+    reads_by_sample_polish = reads_with_size
+        .map { barcode, read_file, genome_size, sample ->
+            tuple(sample, read_file)
         }
-   
-    medaka_consensus_ch= MEDAKA(medaka_ch)
 
-    dna_apler_ch = DNAAPLER(medaka_consensus_ch.assembly_medaka)
+    reads_by_sample_medaka = reads_with_size
+        .map { barcode, read_file, genome_size, sample ->
+            tuple(sample, read_file)
+        }
 
-    wrap_ch = WRAP(dna_apler_ch.reoriented_assembly)
+    reads_by_sample_mosdepth = reads_with_size
+        .map { barcode, read_file, genome_size, sample ->
+            tuple(sample, read_file)
+        }
 
-    prokka_ch = PROKKA (wrap_ch)
+    // Polishing input
+    flye_joined = reads_by_sample_polish
+        .join(flye_assembly, by: 0)
 
-    bakta_ch = BAKTA (wrap_ch, DB_BAKTA_CH)
-
-    agt_ch = prokka_ch.prokka_gff
-            .join(bakta_ch.bakta_gff3)
-            .join(wrap_ch.wrapped)
-
-    ENRICHMENT_ANNOTATION(agt_ch)
-
-    busco_ch = BUSCO(medaka_consensus_ch.assembly_medaka)
+    polishing_input = flye_joined
+        .join(coverage, by: 0)
+        .map { sample, read_file, assembly_fasta, cov ->
+            def rounds = cov <= 14 ? 8 : 5
+            tuple(sample, read_file, assembly_fasta, rounds)
+        }
     
-    quast_ch = QUAST(medaka_consensus_ch.assembly_medaka)
+    (polished, polished_versions, polished_report) = POLISHING_ROUND(polishing_input)
 
-    //MULTIQC Directory for analysis
+    // Medaka
+    medaka_input = reads_by_sample_medaka
+        .join(polished, by: 0)
+        .map { sample, read_file, fasta ->
+            tuple(sample, read_file, fasta)
+        }
 
-    multiqc_ch = MULTIQC( busco_ch.map{i -> i[1]}.collect(), quast_ch.map{i -> i[1]}.collect())
+    medaka = MEDAKA(medaka_input)
+
+    // Final processing
+    dna  = DNAAPLER(medaka.assembly_medaka)
+    wrap = WRAP(dna.reoriented_assembly)
+
+    // Annotation
+    BAKTA(wrap.wrapped)
+
+    // QC
+    busco = BUSCO(wrap.wrapped)
+    quast = QUAST(wrap.wrapped)
+
+    mosdepth_input = reads_by_sample_mosdepth
+        .join(wrap.wrapped, by: 0)
+    mos = MOSDEPTH(mosdepth_input)
+
+
+    multiqc_input = busco.results.map{ it[1] }
+        .mix(quast.results.map{ it[1] })
+        .mix(mos.summary.map{ it[1] })
+        .mix(mos.dist.map{ it[1] })
+        .collect()
+
+    MULTIQC(multiqc_input)
 
     emit:
-    wrap_ch
-
+        assembly = wrap.wrapped
 }
+
+// AMR + MLST
 
 workflow amr_process {
-
+    
     take:
-
-    wrap_ch
+    assembly
 
     main:
-
-    amr_ch = AMR(wrap_ch, params.organism)
-    amr_2_ch = AMR_2(wrap_ch)
-    mlst_ch = MLST(wrap_ch)
+    AMR(assembly, params.organism)
+    AMR_2(assembly)
+    MLST(assembly)
 
 }
+
+// PLASMID ANALYSIS
 
 workflow workflow_plasmid {
     take:
-    wrap_ch
+    assembly
 
     main:
-    
-    //PLASMID SEARCH
-
-    plasmid_search_ch = PLASMID_SEARCH (wrap_ch)
+    PLASMID_SEARCH (assembly)
 
 }
