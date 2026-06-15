@@ -14,17 +14,23 @@ process NANOCOMP {
     path "${task.process}.version.txt", emit: versions
 
     script:
+    def flat_files  = files.join(' ')
+    def flat_labels = labels.join(' ')
     """
     set -euo pipefail
 
     echo "nanocomp\t\$(NanoComp --version 2>&1 || NanoComp -h 2>&1 | head -n 1)" > ${task.process}.version.txt
 
-    for i in \$(seq 0 \$((\${#files[@]}-1))); do
-        ln -sf "\${files[\$i]}" "${id}_\${labels[\$i]}.fastq.gz"
+    # Initialize Bash arrays explicitly
+    files_arr=( ${flat_files} )
+    labels_arr=( ${flat_labels} )
+
+    for i in \$(seq 0 \$((\${#files_arr[@]}-1))); do
+        ln -sf "\${files_arr[\$i]}" "${id}_\${labels_arr[\$i]}.fastq.gz"
     done
 
     NanoComp \\
-        --fastq *.fastq.gz \\
+        --fastq QC_*.fastq.gz \\
         -o Nanocomp
     """
 }

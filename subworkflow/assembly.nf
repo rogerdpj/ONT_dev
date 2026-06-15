@@ -108,6 +108,7 @@ workflow pre_process {
         .ifEmpty {
             PREPARE_KRAKEN_DB().out.db_ready
         }
+        .first()
         .set { kraken_db }
 
     kraken = KRAKEN_ONT(reads_trimmed, kraken_db)
@@ -123,14 +124,22 @@ workflow pre_process {
     reads_clean = pruned.pruned_reads
     
     // QC comparison
-    raw_fastq = qc.fastq_combine.map { id, f -> tuple(id, "raw", f) }
-    trimmed_fastq = reads_trimmed.map { id, f -> tuple(id, "trimmed", f) }
-    clean_fastq = reads_clean.map { id, f -> tuple(id, "clean", f) }
+    raw_fastq = qc.fastq_combine.map { id, f -> tuple(id, "1_raw", f) }
+    trimmed_fastq = reads_trimmed.map { id, f -> tuple(id, "2_trimmed", f) }
+    clean_fastq = reads_clean.map { id, f -> tuple(id, "3_clean", f) }
 
-    nanocomp_input = raw_fastq
+    combined_stream = raw_fastq
         .mix(trimmed_fastq)
         .mix(clean_fastq)
-        .groupTuple(by: 0)
+        .map { id, stage, fastq_file -> tuple("${id}_${stage}", fastq_file) }
+
+    nanocomp_input = combined_stream
+        .toList()
+        .map { all_pairs ->
+            def labels = all_pairs.collect { it[0] }
+            def files  = all_pairs.collect { it[1] }
+            return tuple("QC", labels, files)
+        }
 
     NANOCOMP(nanocomp_input)
 
