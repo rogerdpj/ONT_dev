@@ -112,13 +112,9 @@ def checkInputParams() {
     boolean fatal_error = false
 
     if (!params.input) {
-        log.warn("Missing --input")
-        fatal_error = true
-    } else if (!file(params.input).exists()) {
-        log.warn("Input path does not exist: ${params.input}")
+        log.warn("You need to provide a valid input directory with --input")
         fatal_error = true
     }
-
 
     if (!params.genome_size_file) {
         log.warn("Missing --genome_size_file")
