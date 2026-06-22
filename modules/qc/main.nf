@@ -1,7 +1,7 @@
 process QC {
-    tag "QC:${barcode}"
+    tag "QC: ${barcode}"
     label 'env_nanoplot'
-    cpus 2
+    cpus 4
 
     cache 'deep'
     
@@ -19,7 +19,7 @@ process QC {
 
     script:
     """
-    echo "NanoPlot\t\$(NanoPlot --version 2>&1)" > ${task.process}.version.txt
+    echo "nanoPlot\t\$(NanoPlot --version 2>&1 | grep -oE '[0-9]+\\.[0-9]+(\\.[0-9]+)?' | head -n 1)" > ${task.process}.version.txt
 
     cat ${barcode_dir}/*.fastq.gz > barcode_${barcode}.fastq.gz || exit 1
 

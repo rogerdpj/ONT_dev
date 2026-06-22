@@ -9,7 +9,6 @@ Configuration environment:
     Fastq directory:           $params.input
     Out directory:             $params.outdir
     Plasmid analysis:          $params.plasmid
-    Organism:                  $params.organism
 """.stripIndent()
 
 
@@ -35,35 +34,54 @@ include { QUAST                                         }     from '../modules/q
 include { MOSDEPTH                                      }     from '../modules/qc/mosdepth/main'
 include { MULTIQC                                       }     from '../modules/qc/multiqc/main'
 
+include { MLST                                          }     from '../modules/mlst/main'
 include { AMR                                           }     from '../modules/AMR/abricate/main'
 include { AMR_2                                         }     from '../modules/AMR/amrfinder/main'
-include { MLST                                          }     from '../modules/mlst/main'
 
 include { PLASMID_SEARCH                                }     from '../modules/plasmid/main'
+
+include { INTEGRATE                                     }     from '../modules/integrate/main'
+include { COLLECT                                       }     from '../modules/collect/main'
 
 // MAIN WORKFLOW
 
 workflow assembly {
-    kraken  = workflow_kraken_process()
-    pre     = pre_process(kraken.kraken_db)
-    asm     = assembly_process(pre.reads)
-    amr_process (asm.assembly)
-    
-    if (params.plasmid) {
-        workflow_plasmid(asm.assembly)
+    def target_db_dir = file("${params.kraken_db_dir}/${params.db_select}")
+    def db_check_file = file("${target_db_dir}/hash.k2d")
+
+    def kraken_db_ch = Channel.empty()
+    if ( db_check_file.exists() ) {
+        log.info "Kraken2 database found locally! Skipping setup step."
+        kraken_db_ch = Channel.value( target_db_dir )
+    } else {
+        log.info "Kraken2 database not found. Triggering download/build process..."
+        kraken_db_ch = PREPARE_KRAKEN_DB().db_ready.first()
     }
-}
+    pre     = pre_process(kraken_db_ch)
+    asm     = assembly_process(pre.reads)
+    amr     = amr_process (asm.assembly)
 
-// DATABASE SETUP
+    version_channels = [
+        pre.versions,
+        asm.versions,
+        amr.versions
+    ]
+   
+    if (params.plasmid) {
+        plasmid     = workflow_plasmid(asm.assembly)
+        version_channels << plasmid.versions
+        
+        integr = integration(
+            amr.abricate_tuple,
+            plasmid.plasmid_channel
+        )
+        integr.report.collect()
 
-workflow workflow_kraken_process {
+    }
     
-    kraken_db_ready = PREPARE_KRAKEN_DB()
-
-    emit:
-        kraken_db = kraken_db_ready.db_ready
-
+    collect(version_channels, amr.mlst_channel, amr.abricate_channel)
 }
+
 
 // PREPROCESSING
 
@@ -102,15 +120,6 @@ workflow pre_process {
     reads_trimmed = trimmed.reads_trimmed_gz
 
     // Kraken input
-    Channel
-        .fromPath("${params.kraken_db_dir}/${params.db_select}/hash.k2d")
-        .map { file(params.kraken_db_dir) }
-        .ifEmpty {
-            PREPARE_KRAKEN_DB().out.db_ready
-        }
-        .first()
-        .set { kraken_db }
-
     kraken = KRAKEN_ONT(reads_trimmed, kraken_db)
 
     // Prunning
@@ -136,15 +145,22 @@ workflow pre_process {
     nanocomp_input = combined_stream
         .toList()
         .map { all_pairs ->
-            def labels = all_pairs.collect { it[0] }
-            def files  = all_pairs.collect { it[1] }
+            def sorted_pairs = all_pairs.sort { a, b -> a[0] <=> b[0] }
+            def labels = sorted_pairs.collect { it[0] }
+            def files  = sorted_pairs.collect { it[1] }
             return tuple("QC", labels, files)
         }
 
-    NANOCOMP(nanocomp_input)
+    nanocomp = NANOCOMP(nanocomp_input)
 
     emit:
         reads = reads_clean
+        versions = qc.versions
+            .mix(trimmed.versions)
+            .mix(kraken.versions)
+            .mix(pruned.versions)
+            .mix(nanocomp.versions)
+
 }
 
 // ASSEMBLY + POLISHING + QC
@@ -204,7 +220,7 @@ workflow assembly_process {
     polishing_input = flye_joined
         .join(coverage, by: 0)
         .map { sample, read_file, assembly_fasta, cov ->
-            def rounds = cov <= 14 ? 8 : 5
+            def rounds = cov <= 14 ? 5 : 1
             tuple(sample, read_file, assembly_fasta, rounds)
         }
     
@@ -224,7 +240,7 @@ workflow assembly_process {
     wrap = WRAP(dna.reoriented_assembly)
 
     // Annotation
-    BAKTA(wrap.wrapped)
+    bakta = BAKTA(wrap.wrapped)
 
     // QC
     busco = BUSCO(wrap.wrapped)
@@ -241,10 +257,22 @@ workflow assembly_process {
         .mix(mos.dist.map{ it[1] })
         .collect()
 
-    MULTIQC(multiqc_input)
+    multiqc = MULTIQC(multiqc_input)
+
 
     emit:
         assembly = wrap.wrapped
+        versions = flye.versions
+            .mix(polished_versions)
+            .mix(medaka.versions)
+            .mix(dna.versions)
+            .mix(wrap.versions)
+            .mix(bakta.versions)
+            .mix(busco.versions)
+            .mix(quast.versions)
+            .mix(mos.versions)
+            .mix(multiqc.versions)
+
 }
 
 // AMR + MLST
@@ -255,9 +283,30 @@ workflow amr_process {
     assembly
 
     main:
-    AMR(assembly, params.organism)
-    AMR_2(assembly)
-    MLST(assembly)
+    mlst = MLST(assembly)
+
+    mlst_organism_ch = mlst.tab
+        .map { sample_code, tab_file ->
+            def line = tab_file.text.trim()
+            def parts = line.tokenize() // splits by spaces/tabs
+            def organism = parts.size() > 1 ? parts[1] : "default"
+            return tuple(sample_code, organism)
+        }
+    
+    amr_input = assembly.join(mlst_organism_ch, by: 0)
+
+    amr = AMR(amr_input)
+    amr_2 = AMR_2(assembly)
+    
+
+    emit:
+    versions = amr.versions
+        .mix(amr_2.versions)
+        .mix(mlst.versions)
+    
+    mlst_channel = mlst.tab.map { sample_code, file -> file }
+    abricate_channel = amr.abricate_report
+    abricate_tuple = amr.abricate_tuple
 
 }
 
@@ -268,6 +317,59 @@ workflow workflow_plasmid {
     assembly
 
     main:
-    PLASMID_SEARCH (assembly)
+    plasmid = PLASMID_SEARCH (assembly)
 
+    emit:
+    versions = plasmid.versions
+    plasmid_channel = plasmid.contig_report
+}
+
+workflow integration {
+
+    take:
+    abricate_tuple
+    plasmid_channel
+
+    main:
+    // Join both inputs by sample
+    to_integrate = abricate_tuple
+        .join(plasmid_channel, by: 0)
+
+    integrated = INTEGRATE(to_integrate)
+
+    // Return only files (not tuples)
+    emit:
+    report = integrated.report.map { sample_code, file -> file }
+}
+
+workflow collect {
+
+    take:
+    version_channels
+    mlst_channel
+    abricate_channel
+
+    main:
+
+    all_versions = Channel.empty()
+
+    version_channels.each { ch ->
+        all_versions = all_versions.mix(ch)
+    }
+    
+    unique_versions = all_versions
+        .unique { it.name }
+        .toSortedList { a, b -> a.name <=> b.name }
+
+    sorted_mlst = mlst_channel
+        .toSortedList { a, b -> a.name <=> b.name }
+
+    sorted_abricate = abricate_channel
+        .toSortedList { a, b -> a.name <=> b.name }
+
+    COLLECT(
+        unique_versions,
+        sorted_mlst,
+        sorted_abricate
+    )
 }

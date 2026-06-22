@@ -1,5 +1,5 @@
 process TRIMMING {
-    tag "TRIM:${barcode_id}"
+    tag "TRIM: ${barcode_id}"
     label 'env_trimming'
 
     publishDir "${params.outdir}/logs/trimming", mode: 'copy', pattern: "*.log"
@@ -18,8 +18,8 @@ process TRIMMING {
     
     script:
     """
-    echo "filtlong: \$(filtlong --version 2>&1)" > ${task.process}.version.txt
-    echo "porechop: \$(porechop --version 2>&1)" >> ${task.process}.version.txt
+    echo "filtlong\t\$(filtlong --version 2>&1 | grep -oE '[0-9]+\\.[0-9]+(\\.[0-9]+)?' | head -n 1)" > ${task.process}.version.txt
+    echo "porechop\t\$(porechop --version 2>&1 | grep -oE '[0-9]+\\.[0-9]+(\\.[0-9]+)?' | head -n 1)" >> ${task.process}.version.txt
 
     filtlong \
         --min_length ${params.min_length ?: 1000} \

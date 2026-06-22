@@ -1,5 +1,5 @@
 process WRAP {
-    tag "Wrapping  ${sample_code}"
+    tag "Wrapping: ${sample_code}"
     label 'env_wrap'
 
     publishDir "${params.outdir}/2-Assembly", mode: 'copy', pattern: "*_final.fasta"
@@ -16,7 +16,7 @@ process WRAP {
     """
     set -euo pipefail
 
-    echo -e "seqtk\t\$(seqtk 2>&1 | grep -i version || echo "seqtk version unknown")" > ${task.process}.version.txt
+    echo -e "seqtk\t\$(seqtk 2>&1 | grep -oE '[0-9]+\\.[0-9]+(-[a-zA-Z0-9]+)?' | head -n 1)" > ${task.process}.version.txt
 
     seqtk seq -l 60 ${fasta} > ${sample_code}_final.fasta
     """

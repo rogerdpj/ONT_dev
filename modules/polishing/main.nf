@@ -1,5 +1,5 @@
 process POLISHING_ROUND {
-    tag "Polishing ${sample_code} for ${max_rounds} rounds"
+    tag "Polishing: ${sample_code} for ${max_rounds} rounds"
     label 'env_polishing'
  
     publishDir "${params.outdir}/versions", mode: 'copy', pattern: "*version.txt"

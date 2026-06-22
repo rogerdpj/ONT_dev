@@ -1,5 +1,5 @@
 process MLST {
-    tag "MLST for ${sample_code}"
+    tag "MLST: ${sample_code}"
     label 'env_mlst'
     
     publishDir "${params.outdir}/4-MLST", mode: 'copy', pattern: "*.mlst.tab"
@@ -10,15 +10,15 @@ process MLST {
     tuple val(sample_code), path(assembly_file)
 
     output:
-    path("*.mlst.tab"), emit: tab
-    path("*.mlst.json"), emit: json
+    tuple val(sample_code), path("*.mlst.tab"), emit: tab
+    tuple val(sample_code), path("*.mlst.json"), emit: json
     path "${task.process}.version.txt", emit: versions
 
     script:
     """
     set -euo pipefail
 
-    echo -e "mlst\t\$(mlst --version 2>&1 | head -n 1)" > ${task.process}.version.txt
+    echo -e "mlst\t\$(mlst --version 2>&1 | head -n 1 | awk '{print \$2}')" > ${task.process}.version.txt
 
     mlst \
         --threads ${task.cpus} \

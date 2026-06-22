@@ -46,24 +46,12 @@ Configuration environment:
     Profile:                   ${workflow.profile}
 """.stripIndent()
 
-
-log.info """\
-Run summary:
-    Input:                     ${params.input}
-    Output:                    ${params.outdir}
-    Short reads:               ${params.short_inputs ?: 'N/A'}
-    Plasmid analysis:          ${params.plasmid}
-    Organism:                  ${params.organism}
-""".stripIndent()
-
-
 // Subworkflow import
 
 include { assembly }   from "$projectDir/subworkflow/assembly"
 //include { hybrid }     from "$projectDir/subworkflow/hybrid"
 
 // Main workflow
-
 workflow {
 
     switch (params.mode) {
@@ -80,8 +68,6 @@ workflow {
 }
 
 // Functions 
-
-
 def printHelp() {
     def readmeFile = file("${projectDir}/README.md")
     def printSection = false
@@ -104,8 +90,6 @@ def printHelp() {
         log.warn "README.md not found in ${projectDir}"
     }
 }
-
-
 
 def checkInputParams() {
 

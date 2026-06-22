@@ -1,5 +1,5 @@
 process BUSCO {
-    tag "BUSCO for ${sample_code}"
+    tag "BUSCO: ${sample_code}"
     label 'env_busco'
 
     publishDir "${params.outdir}/1-QC/genome_QC/1-BUSCO", mode: "copy", pattern: "${sample_code}_busco*"
@@ -18,7 +18,7 @@ process BUSCO {
     """
     set -euo pipefail
 
-    echo -e "busco\t\$(busco --version 2>&1)" > ${task.process}.version.txt
+    echo -e "busco\t\$(busco --version 2>&1 | awk '{print \$2}')" > ${task.process}.version.txt
 
     busco \
         -i ${assemble} \

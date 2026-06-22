@@ -1,5 +1,5 @@
 process KRAKEN_ONT {
-  tag "Taxonomic classification of ${sample_id}"
+  tag "Taxonomic classification: ${sample_id}"
   label 'env_kraken'
 
   cpus   { params.kraken_cpus ?: 4 }
@@ -26,18 +26,18 @@ process KRAKEN_ONT {
   """
   set -euo pipefail
 
-  echo "kraken2\t\$(kraken2 --version 2>&1 | head -n 1)" > ${task.process}.version.txt
+  echo "kraken2\t\$(kraken2 --version 2>&1 | grep -oE '[0-9]+\\.[0-9]+(\\.[0-9]+)?')" > ${task.process}.version.txt
   
   for f in hash.k2d opts.k2d taxo.k2d; do
-      [[ -r "${db_dir}/${params.db_select}/\$f" ]] || { 
-          echo "Missing file: ${db_dir}/${params.db_select}/\$f"; 
-          ls -lah "${db_dir}/${params.db_select}";
+      [[ -r "${db_dir}/\$f" ]] || { 
+          echo "Missing file: ${db_dir}/\$f"; 
+          ls -lah "${db_dir}";
           exit 2; 
       }
   done
 
   kraken2 \
-    --db "${db_dir}/${params.db_select}" \
+    --db "${db_dir}" \
     "${reads_sn}" \
     --threads ${task.cpus} \
     --gzip-compressed \
@@ -63,7 +63,7 @@ process KRAKEN_ONT {
 }
 
 process SEQTK_PRUNE {
-  tag "Filtering contaminants of ${sample_id}"
+  tag "Filtering contaminants: ${sample_id}"
   label 'env_seqtk'
   
   publishDir "${params.outdir}/versions", mode: 'copy', pattern: "*.version.txt"
@@ -82,7 +82,7 @@ process SEQTK_PRUNE {
   """
   set -euo pipefail
   
-  echo "seqtk\t\$(seqtk --version 2>&1 | head -n 1)" > ${task.process}.version.txt
+  echo -e "seqtk\t\$(seqtk 2>&1 | grep -oE '[0-9]+\\.[0-9]+(-[a-zA-Z0-9]+)?' | head -n 1)" > ${task.process}.version.txt
 
   seqtk subseq ${reads_sn} ${keep_ids} | gzip > ${sample_id}.prune.clean.fastq.gz \
   2> ${sample_id}.seqtk.log

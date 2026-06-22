@@ -1,5 +1,5 @@
 process MEDAKA {
-    tag "Medaka consensus for ${sample_code}"
+    tag "Medaka consensus: ${sample_code}"
     label 'env_medaka'
     
     publishDir "${params.outdir}/versions", mode: 'copy', pattern: "*.version.txt"
@@ -17,7 +17,7 @@ process MEDAKA {
     """
     set -euo pipefail
 
-    echo -e "medaka\t\$(medaka_consensus 2>&1 | head -n 1)" > ${task.process}.version.txt
+    echo -e "medaka\t\$(medaka_consensus 2>&1 | grep -oE '[0-9]+\\.[0-9]+\\.[0-9]+' | head -n 1)" > ${task.process}.version.txt
 
     echo "Using Medaka model: ${params.medaka_model}"
     

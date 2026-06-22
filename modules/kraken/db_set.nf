@@ -2,6 +2,8 @@ process PREPARE_KRAKEN_DB {
   tag "${params.db_select ?: 'db_16GB'}"
   label 'env_kraken_db'
 
+  containerOptions = params.db_bind ? "--bind ${params.db_bind}" : null
+
   cpus 2
   memory '4 GB'
   time '24h'
@@ -12,7 +14,6 @@ process PREPARE_KRAKEN_DB {
   script:
 
   """
-
   export DB_DIR="/kraken2-db"
   export DB_SELECT='${params.db_select}'
 
@@ -23,16 +24,14 @@ process PREPARE_KRAKEN_DB {
       echo "Kraken DB already exists → skipping download"
   else
       echo "Kraken DB not found → downloading"
+      ${ params.db_url ? "export DB_URL='${params.db_url}'" : ":" }
+      ${ params.db_url_checksum ? "export DB_URL_CHECKSUM='${params.db_url_checksum}'" : ":" }
       kraken2-entrypoint.sh prepare-db "\$DB_SELECT"
   fi
-
-  ${ params.db_url ? "export DB_URL='${params.db_url}'" : ":" }
-  ${ params.db_url_checksum ? "export DB_URL_CHECKSUM='${params.db_url_checksum}'" : ":" }
   
-  mkdir -p kraken_db
-  ln -s /kraken2-db kraken_db
-
   chmod -R a+rX "\$DB_DIR" || true
+
+  ln -sf "\$DB_DIR/\$DB_SELECT" kraken_db
   
   """
 }

@@ -1,6 +1,6 @@
 FROM mambaorg/micromamba:1.5.7
 LABEL authors="ROGER DE PEDRO JOVE" \
-      description="Docker image containing the environment with all the tools for postassebly analysis of ONT assemblies"
+      description="Docker image containing the environment with all the tools for postassembly analysis of ONT assemblies"
 
 # Prevent interactive prompts
 ENV DEBIAN_FRONTEND=noninteractive
@@ -12,6 +12,7 @@ RUN micromamba create -n postassembly_env -y \
     abricate=1.4.0 \
     ncbi-amrfinderplus=4.2.7 \
     mob_suite=3.1.9 \
+    pandas \
     wget \
     && micromamba clean --all --yes
 

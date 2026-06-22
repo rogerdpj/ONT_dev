@@ -1,5 +1,5 @@
 process DNAAPLER {
-    tag "Reorienting ${sample_code}"
+    tag "Reorienting: ${sample_code}"
     label 'env_dnaapler'
 
     publishDir "${params.outdir}/versions", mode: 'copy', pattern: "*.version.txt"
@@ -16,7 +16,7 @@ process DNAAPLER {
     """    
     set -euo pipefail
 
-    echo -e "dnaapler\t\$(dnaapler --version 2>&1)" > ${task.process}.version.txt
+    echo -e "dnaapler\t\$(dnaapler --version 2>&1 | awk '{print \$3}')" > ${task.process}.version.txt
     
     dnaapler all \
         -i ${consensus_fasta} \

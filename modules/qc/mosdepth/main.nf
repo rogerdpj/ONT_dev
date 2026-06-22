@@ -1,6 +1,6 @@
 process MOSDEPTH {
 
-    tag "Mosdepth ${sample_code}"
+    tag "Mosdepth: ${sample_code}"
     label 'env_mosdepth'
 
     publishDir "${params.outdir}/1-QC/genome_QC/3-Mosdepth", mode: 'copy', pattern: "${sample_code}.*.txt"
@@ -18,7 +18,7 @@ process MOSDEPTH {
     """
     set -euo pipefail
 
-    echo -e "mosdepth\t\$(mosdepth --version 2>&1)" > ${task.process}.version.txt
+    echo -e "mosdepth\t\$(mosdepth --version 2>&1 | awk '{print \$2}')" > ${task.process}.version.txt
 
     # Index reference
     samtools faidx ${fasta}

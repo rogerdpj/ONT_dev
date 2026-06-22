@@ -1,5 +1,5 @@
 process ASSEMBLY {
-    tag "Flye assembly of ${sample_code}/${barcode_id} "
+    tag "Flye assembly: ${sample_code}/${barcode_id} "
     label 'env_flye'
         
     publishDir "${params.outdir}/2-Assembly/1-Flye_structural", mode: 'copy', pattern: "flye_output_${sample_code}/*"
@@ -25,7 +25,7 @@ process ASSEMBLY {
     set -euo pipefail
     
     echo -e "flye\t\$(flye --version 2>&1 | head -n 1)" > ${task.process}.version.txt
-    echo -e "nanostat\t\$(NanoStat --version 2>&1)" >> ${task.process}.version.txt
+    echo -e "nanostat\t\$(NanoStat --version 2>&1 | awk '{print \$2}')" >> ${task.process}.version.txt
 
     INPUT=${barcode_file}
   

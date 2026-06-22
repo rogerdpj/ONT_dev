@@ -1,5 +1,5 @@
 process BAKTA {
-    tag "BAKTA annotation for ${sample_code}"
+    tag "BAKTA annotation: ${sample_code}"
     label 'env_bakta' 
 
     publishDir "${params.outdir}/2-Assembly/2-Annotations", mode: 'copy', pattern: "annotations_${sample_code}/*"
@@ -20,7 +20,7 @@ process BAKTA {
     export MPLCONFIGDIR="\$PWD/.mplconfig"
     mkdir -p "\$MPLCONFIGDIR"
     
-    echo -e "bakta\t\$(bakta --version 2>&1 | head -n 1)" > ${task.process}.version.txt
+    echo -e "bakta\t\$(bakta --version 2>&1 | grep -i bakta | head -n 1 | awk '{print \$2}')" > ${task.process}.version.txt
 
     bakta \
           --threads ${task.cpus} \

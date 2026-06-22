@@ -1,5 +1,5 @@
 process QUAST {
-    tag "QUAST for ${sample_code}"
+    tag "QUAST: ${sample_code}"
     label 'env_quast'
 
     publishDir "${params.outdir}/1-QC/genome_QC/2-QUAST", mode: 'copy', pattern: "quast_result_${sample_code}*"
@@ -15,7 +15,7 @@ process QUAST {
     script:
 
     """
-    echo -e "quast\t\$(quast.py --version 2>&1)" > ${task.process}.version.txt
+    echo -e "quast\t\$(quast.py --version 2>&1 | grep -i 'QUAST' | awk '{print \$2}')" > ${task.process}.version.txt
     
     mkdir -p quast_result_${sample_code}
 

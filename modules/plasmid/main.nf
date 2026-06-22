@@ -1,5 +1,5 @@
 process PLASMID_SEARCH {
-    tag "Plasmid typing for ${sample_code}"
+    tag "Plasmid typing: ${sample_code}"
     label 'env_plasmid'
 
     publishDir "${params.outdir}/5-Plasmids", mode: 'copy', pattern: "*_mob_output*"
@@ -9,14 +9,15 @@ process PLASMID_SEARCH {
     tuple val(sample_code), path(consensus_fasta)
 
     output:
-    tuple val(sample_code),  path("${sample_code}_mob_output"), emit: mob_result
+    tuple val(sample_code), path("${sample_code}_mob_output"), emit: mob_result
+    tuple val(sample_code), path("${sample_code}_mob_output/contig_report.txt"), emit: contig_report
     path "${task.process}.version.txt", emit: versions
 
     script:
     """
     set -euo pipefail
 
-    echo -e "mob_suite\t\$(mob_recon --version 2>&1 | head -n 1)" > ${task.process}.version.txt
+    echo -e "mob_suite\t\$(mob_recon --version 2>&1 | grep -oE '[0-9]+\\.[0-9]+(\\.[0-9]+)?' | head -n 1)" > ${task.process}.version.txt
 
     mkdir -p ${sample_code}_mob_output
 

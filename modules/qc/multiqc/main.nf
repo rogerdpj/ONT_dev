@@ -15,7 +15,7 @@ process MULTIQC {
     script:
     """
     set -euo pipefail
-    echo -e "multiqc\t\$(multiqc --version 2>&1)" > ${task.process}.version.txt
+    echo -e "multiqc\t\$(multiqc --version 2>&1 | awk '{print \$3}')" > ${task.process}.version.txt
 
     mkdir -p multiqc_input
     cp -r ${qc_files} multiqc_input/ 2>/dev/null || true

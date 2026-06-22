@@ -1,5 +1,5 @@
 process AMR_2 {
-    tag "AMRFinder search for ${sample_code}"
+    tag "AMRFinder: ${sample_code}"
     label 'env_amrfinder'
         
     publishDir "${params.outdir}/3-AMR/AMRFinder", mode: 'copy', pattern: "*.tsv"
