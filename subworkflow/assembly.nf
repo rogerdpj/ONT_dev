@@ -73,10 +73,11 @@ workflow assembly {
         
         integr = integration(
             amr.abricate_tuple,
+            amr.amrfinder_tuple,
             plasmid.plasmid_channel
         )
-        integr.report.collect()
-
+        integr.abricate_report.collect()
+        integr.amrfinder_report.collect()
     }
     
     collect(version_channels, amr.mlst_channel, amr.abricate_channel)
@@ -307,7 +308,7 @@ workflow amr_process {
     mlst_channel = mlst.tab.map { sample_code, file -> file }
     abricate_channel = amr.abricate_report
     abricate_tuple = amr.abricate_tuple
-
+    amrfinder_tuple = amr_2.amrfinder_tuple
 }
 
 // PLASMID ANALYSIS
@@ -328,18 +329,20 @@ workflow integration {
 
     take:
     abricate_tuple
+    amrfinder_tuple
     plasmid_channel
 
     main:
-    // Join both inputs by sample
     to_integrate = abricate_tuple
+        .join(amrfinder_tuple, by: 0)
         .join(plasmid_channel, by: 0)
 
     integrated = INTEGRATE(to_integrate)
 
     // Return only files (not tuples)
     emit:
-    report = integrated.report.map { sample_code, file -> file }
+    abricate_report = integrated.abricate
+    amrfinder_report = integrated.amrfinder
 }
 
 workflow collect {

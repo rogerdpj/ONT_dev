@@ -10,6 +10,7 @@ process AMR_2 {
 
     output:
     path("${sample_code}_amrfinder_report.tsv"), emit: amrfinder_report
+    tuple val(sample_code), path("${sample_code}_amrfinder_report.tsv"), emit: amrfinder_tuple 
     path "${task.process}.version.txt", emit: versions
 
     script:
