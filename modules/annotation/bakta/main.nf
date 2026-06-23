@@ -23,7 +23,7 @@ process BAKTA {
     echo -e "bakta\t\$(bakta --version 2>&1 | grep -i bakta | head -n 1 | awk '{print \$2}')" > ${task.process}.version.txt
 
     bakta \
-          --threads ${task.cpus} \
+          --threads 4 \
           --keep-contig-headers \
           --skip-sorf \
           --prefix ${sample_code} \
